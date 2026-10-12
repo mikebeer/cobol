@@ -25,7 +25,7 @@ loads at run time (directories in `COB_LIBRARY_PATH`).
 * Files: sequential, line sequential, relative and indexed (alternate
   keys), READ/WRITE/REWRITE/DELETE/START, FILE STATUS, USE
   declaratives, SORT and MERGE (files and tables).
-* About 150 intrinsic functions, user-defined FUNCTION-ID.
+* Intrinsic functions (numeric, string, date/time, financial, ...), user-defined FUNCTION-ID.
 * Object orientation: CLASS-ID, FACTORY, OBJECT, METHOD-ID, INVOKE,
   INHERITS, INTERFACE, NEW, SELF/SUPER.
 * Separate compilation, dynamic CALL of modules, calls of C functions.
@@ -36,8 +36,7 @@ statements. See chapter 15 of the manual for the full list.
 ## Documentation
 
 `docs/COBOL-User-Guide.docx` (and `.pdf`) is the manual (81 pages);
-`make -C docs` is not needed, use `sh docs/make_manual.sh` to rebuild
-(needs node with `docx`, LibreOffice and poppler). Examples are in
+`sh docs/make_manual.sh` rebuilds it (needs node with `docx`, LibreOffice and poppler). Examples are in
 `examples/`.
 
 ## Layout
