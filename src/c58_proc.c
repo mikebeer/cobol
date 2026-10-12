@@ -93,11 +93,16 @@ static void emit_program(Prog *pr)
                      pr->nloc));
     for (i = 0; i < pr->nusing; i++)
         sb_s(&f, fmt(
-                "    if (cob_na > %d && cob_a[%d]) BIND%d(cob_a[%d]"
-                     "->data);\n", i, i, pr->using_[i]->id, i));
+                "    if (cob_na > %d && cob_a[%d]) BIND%d("
+                     "cob_adapt(cob_a[%d], &F%d));\n", i, i,
+                     pr->using_[i]->id, i, pr->using_[i]->id));
     if (pr->retitem) {
         Item *ri = lookup(pr->retitem, 0, 0);
-        if (ri && ri->storage == 1)
+        if (ri && ri->storage == 1 && pr->isfunc)
+            sb_s(&f, fmt("    BIND%d((unsigned char *)cob_alloc"
+                         "(%ld, 1));\n", ri->master->id,
+                         ri->master->bufsize + 8));
+        else if (ri && ri->storage == 1)
             sb_s(&f, fmt("    if (cob_ret) BIND%d(cob_ret->data);\n"
                          "    else BIND%d((unsigned char *)cob_alloc"
                          "(%ld, 1));\n", ri->master->id,
@@ -107,7 +112,10 @@ static void emit_program(Prog *pr)
     sb_s(&f, "cob_exit: ;\n");
     if (pr->retitem) {
         Item *ri = lookup(pr->retitem, 0, 0);
-        if (ri && ri->storage != 1)
+        if (ri && pr->isfunc)
+            sb_s(&f, fmt("    if (cob_ret) cob_fret(cob_ret, &F%d);\n",
+                         ri->id));
+        else if (ri && ri->storage != 1)
             sb_s(&f, fmt("    if (cob_ret) cob_move(&F%d, cob_ret);\n",
                          ri->id));
     }
@@ -140,6 +148,13 @@ static void parse_procedure(void)
         }
     }
     if (acc("RETURNING")) P->retitem = get_name();
+    if (P->isfunc && P->retitem && nufn_num < 64) {
+        Item *ri = lookup(P->retitem, 0, 0);
+        if (ri && (ri->ctype == CT_NUMDISP || ri->ctype == CT_BIN ||
+                   ri->ctype == CT_BIN5 || ri->ctype == CT_PACKED ||
+                   ri->ctype == CT_FLT || ri->ctype == CT_DBL))
+            ufn_num[nufn_num++] = xdup(P->name + 3);
+    }
     need_period();
     O = &P->body;
     memset(&retcases, 0, sizeof retcases);
@@ -159,10 +174,12 @@ static void parse_procedure(void)
     for (;;) {
         Tok *t = cur();
         if (at_eof()) break;
-        if (isw("END") && isw_at(1, "PROGRAM")) break;
+        if (isw("END") && (isw_at(1, "PROGRAM") ||
+                           isw_at(1, "FUNCTION"))) break;
         if ((isw("IDENTIFICATION") || isw("ID")) &&
             isw_at(1, "DIVISION")) break;
-        if (isw("PROGRAM-ID") || isw("CLASS-ID")) break;
+        if (isw("PROGRAM-ID") || isw("CLASS-ID") ||
+            isw("FUNCTION-ID")) break;
         if (t->k == T_WORD && isw_at(1, "SECTION")) {
             char *n = t->s;
             tp += 2;
@@ -202,7 +219,9 @@ static void parse_procedure(void)
             tp++;
             sentence_end();
             sentence_start();
-        } else if (!(at_eof() || (isw("END") && isw_at(1, "PROGRAM"))))
+        } else if (!(at_eof() || (isw("END") && (isw_at(1, "PROGRAM")
+                                                 || isw_at(1,
+                                                           "FUNCTION")))))
             syn("unexpected word in statement");
     }
     close_section();
@@ -233,13 +252,19 @@ static void parse_program(Prog *outer)
         need("DIVISION");
         need_period();
     }
-    need("PROGRAM-ID");
+    if (acc("FUNCTION-ID")) pr->isfunc = 1;
+    else need("PROGRAM-ID");
     acc_period();
     name = get_name();
     pr->name = upcase(name);
+    if (pr->isfunc) pr->name = cat2("FN:", pr->name);
     pr->cname = prog_c_name(pr->name);
     if (acc("AS")) {
-        if (cur()->k == T_STR) { pr->name = upcase(cur()->s); tp++; }
+        if (cur()->k == T_STR) {
+            pr->name = upcase(cur()->s);
+            if (pr->isfunc) pr->name = cat2("FN:", pr->name);
+            tp++;
+        }
     }
     for (;;) {
         skip_is();
@@ -289,13 +314,14 @@ static void parse_program(Prog *outer)
     parse_procedure();
     emit_program(pr);
     /* nested programs */
-    while ((isw("IDENTIFICATION") || isw("ID") || isw("PROGRAM-ID")) &&
-           !(isw("END"))) {
+    while ((isw("IDENTIFICATION") || isw("ID") || isw("PROGRAM-ID") ||
+            isw("FUNCTION-ID")) && !(isw("END"))) {
         Prog *saved = pr;
         parse_program(pr);
         P = saved;
     }
-    if (isw("END") && isw_at(1, "PROGRAM")) {
+    if (isw("END") && (isw_at(1, "PROGRAM") ||
+                       isw_at(1, "FUNCTION"))) {
         tp += 2;
         get_name();
         acc_period();

@@ -173,7 +173,7 @@ static int PGM35(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI36, 3); }
-    if (cob_na > 0 && cob_a[0]) BIND40(cob_a[0]->data);
+    if (cob_na > 0 && cob_a[0]) BIND40(cob_adapt(cob_a[0], &F40));
 cob_clr_ex(); E = 0;
 S1 = cdx_lit(&D1, "10");
 E |= cob_addto(S1, &F40, 0, 0);
@@ -226,7 +226,7 @@ static int PGM45(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI46, 3); }
-    if (cob_na > 0 && cob_a[0]) BIND50(cob_a[0]->data);
+    if (cob_na > 0 && cob_a[0]) BIND50(cob_adapt(cob_a[0], &F50));
 cob_clr_ex(); E = 0;
 S1 = cdx_lit(&D1, "2");
 E |= cob_mulby(S1, &F50, 0, 0);

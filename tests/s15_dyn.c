@@ -44,7 +44,7 @@ static int PGM1(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI2, 3); }
-    if (cob_na > 0 && cob_a[0]) BIND6(cob_a[0]->data);
+    if (cob_na > 0 && cob_a[0]) BIND6(cob_adapt(cob_a[0], &F6));
 cob_clr_ex(); E = 0;
 S1 = cdx_lit(&D1, "100");
 E |= cob_addto(S1, &F6, 0, 0);

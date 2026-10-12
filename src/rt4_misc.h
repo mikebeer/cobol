@@ -200,6 +200,27 @@ static void cob_byvalue(CobFld *dst, const CobDec *v)
     dst->attr = &cob_bv_attr;
 }
 
+/* the data of an argument for a formal parameter: an argument that
+   is shorter than the parameter (a literal) is converted */
+static unsigned char *cob_adapt(CobFld *a, const CobFld *formal)
+{
+    static unsigned char *keep[16];
+    static int nk = 0;
+    unsigned char *b;
+    CobFld t;
+    if (a->size >= formal->size || !formal->attr) return a->data;
+    b = (unsigned char *)malloc((size_t)formal->size + 8);
+    if (!b) cob_fatal("out of memory");
+    t.size = formal->size;
+    t.data = b;
+    t.attr = formal->attr;
+    memset(b, ' ', (size_t)formal->size);
+    cob_move(a, &t);
+    free(keep[nk & 15]);
+    keep[nk++ & 15] = b;
+    return b;
+}
+
 /* ---- the program registry and CALL ---- */
 
 typedef int (*CobFn)(int, CobFld **, CobFld *);

@@ -156,5 +156,6 @@ struct Prog {
     char currency;
     Cls *cls;
     int ismethod;
+    int isfunc;                 /* FUNCTION-ID */
     struct Para *dmode[4];      /* USE ... INPUT/OUTPUT/I-O/EXTEND */
 };

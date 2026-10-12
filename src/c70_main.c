@@ -223,7 +223,10 @@ static int translate(char **pf, int npf, char *out, int tostdout)
             fprintf(o, "    cob_reg(\"%s\", PGM%d);\n",
                     allprogs[i]->name, allprogs[i]->id_);
         for (i = 0; i < nallprogs; i++)
-            if (!allprogs[i]->outer) { first = i; break; }
+            if (!allprogs[i]->outer && !allprogs[i]->isfunc) {
+                first = i;
+                break;
+            }
         fprintf(o, "    PGM%d(0, 0, 0);\n", allprogs[first]->id_);
         fprintf(o,
                 "    cob_stop((int)cob_getrc());\n    return 0;\n}\n");

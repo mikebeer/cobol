@@ -355,9 +355,15 @@ char *opd_fld(Opd *o)
     }
 }
 
+/* names of user functions seen with a numeric result */
+static char *ufn_num[64];
+static int nufn_num = 0;
+
 static int user_function_known(const char *n)
 {
-    (void)n;
+    int i;
+    for (i = 0; i < nufn_num; i++)
+        if (!strcmp(ufn_num[i], n)) return 1;
     return 0;
 }
 
@@ -372,11 +378,11 @@ static Opd p_function(void)
     memset(&o, 0, sizeof o);
     name = get_name();
     if (!is_intrinsic(name)) {
-        /* user-defined FUNCTION-ID in the repository */
-        if (!user_function_known(name))
-            perr(t->file, t->line, "unknown function", name);
+        /* user-defined FUNCTION-ID */
+        (void)t;
         dump_fn_args(&a, &n);
         o.k = K_FIELD;
+        o.numeric = user_function_known(name);
         o.c = fmt("cob_ufn(%s, %d%s)", c_lit_str(name), n,
                   sb_str(&a));
         return o;

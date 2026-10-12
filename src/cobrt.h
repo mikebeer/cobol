@@ -2112,6 +2112,27 @@ static void cob_byvalue(CobFld *dst, const CobDec *v)
     dst->attr = &cob_bv_attr;
 }
 
+/* the data of an argument for a formal parameter: an argument that
+   is shorter than the parameter (a literal) is converted */
+static unsigned char *cob_adapt(CobFld *a, const CobFld *formal)
+{
+    static unsigned char *keep[16];
+    static int nk = 0;
+    unsigned char *b;
+    CobFld t;
+    if (a->size >= formal->size || !formal->attr) return a->data;
+    b = (unsigned char *)malloc((size_t)formal->size + 8);
+    if (!b) cob_fatal("out of memory");
+    t.size = formal->size;
+    t.data = b;
+    t.attr = formal->attr;
+    memset(b, ' ', (size_t)formal->size);
+    cob_move(a, &t);
+    free(keep[nk & 15]);
+    keep[nk++ & 15] = b;
+    return b;
+}
+
 /* ---- the program registry and CALL ---- */
 
 typedef int (*CobFn)(int, CobFld **, CobFld *);
@@ -3145,10 +3166,42 @@ static CobFld *cob_fn(int id, int n, ...)
     }
 }
 
+/* the callee sets the size and attributes of its result */
+static void cob_fret(CobFld *dst, const CobFld *src)
+{
+    long n = src->size < 4096 ? src->size : 4096;
+    memcpy(dst->data, src->data, (size_t)n);
+    dst->size = n;
+    dst->attr = src->attr;
+}
+
 static CobFld *cob_ufn(const char *name, int n, ...)
 {
-    (void)name; (void)n;
-    cob_fatal("user-defined functions are not available");
+    static unsigned char ubuf[8][4096];
+    static CobFld uf[8];
+    static int uk = 0;
+    CobFld *a[32];
+    char nm[48];
+    va_list ap;
+    int i;
+    CobFld *r = &uf[uk & 7];
+    unsigned char *b = ubuf[uk & 7];
+    uk++;
+    if (n > 32) n = 32;
+    va_start(ap, n);
+    for (i = 0; i < n; i++) a[i] = va_arg(ap, CobFld *);
+    va_end(ap);
+    strcpy(nm, "FN:");
+    cob_upname(nm + 3, name, (long)strlen(name));
+    r->data = b;
+    r->size = 4096;
+    r->attr = 0;
+    for (i = 0; i < cob_nprogs; i++)
+        if (!strcmp(cob_progs[i].name, nm)) {
+            cob_progs[i].fn(n, a, r);
+            return r;
+        }
+    cob_fatal("user-defined function not found");
     return 0;
 }
 

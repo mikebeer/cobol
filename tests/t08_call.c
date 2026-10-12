@@ -208,8 +208,8 @@ static int PGM40(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI41, 3); }
-    if (cob_na > 0 && cob_a[0]) BIND45(cob_a[0]->data);
-    if (cob_na > 1 && cob_a[1]) BIND46(cob_a[1]->data);
+    if (cob_na > 0 && cob_a[0]) BIND45(cob_adapt(cob_a[0], &F45));
+    if (cob_na > 1 && cob_a[1]) BIND46(cob_adapt(cob_a[1], &F46));
 cob_clr_ex(); E = 0;
 S1 = cdx_ld(&D1, &F46);
 E |= cob_addto(S1, &F45, 0, 0);
@@ -261,7 +261,7 @@ static int PGM50(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI51, 3); }
-    if (cob_na > 0 && cob_a[0]) BIND55(cob_a[0]->data);
+    if (cob_na > 0 && cob_a[0]) BIND55(cob_adapt(cob_a[0], &F55));
 cob_move(cob_fn(FN_UPPER_CASE, 1, &F55), &F55);
 goto cob_exit;
 goto cob_exit;
@@ -322,7 +322,7 @@ static int PGM59(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI60, 3); }
-    if (cob_na > 0 && cob_a[0]) BIND64(cob_a[0]->data);
+    if (cob_na > 0 && cob_a[0]) BIND64(cob_adapt(cob_a[0], &F64));
     if (cob_ret) BIND65(cob_ret->data);
     else BIND65((unsigned char *)cob_alloc(12, 1));
 cob_clr_ex(); E = 0;
@@ -377,7 +377,7 @@ static int PGM71(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI72, 3); }
-    if (cob_na > 0 && cob_a[0]) BIND76(cob_a[0]->data);
+    if (cob_na > 0 && cob_a[0]) BIND76(cob_adapt(cob_a[0], &F76));
 CA[0] = &F76;
 cob_clr_ex();
 E = cob_call("INNER", 1, CA, 0);
@@ -430,7 +430,7 @@ static int PGM81(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI82, 3); }
-    if (cob_na > 0 && cob_a[0]) BIND86(cob_a[0]->data);
+    if (cob_na > 0 && cob_a[0]) BIND86(cob_adapt(cob_a[0], &F86));
 cob_clr_ex(); E = 0;
 S1 = cdx_lit(&D1, "10");
 E |= cob_mulby(S1, &F86, 0, 0);
