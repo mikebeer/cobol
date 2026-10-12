@@ -4,6 +4,9 @@
 #ifndef COBRT_H
 #define COBRT_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,4 +16,9 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <limits.h>
+#if (defined(__unix__) || defined(__linux__) || defined(__APPLE__)) \
+    && !defined(COB_NODL)
+#include <dlfcn.h>
+#define COB_HAVE_DL 1
+#endif
 

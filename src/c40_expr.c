@@ -64,8 +64,8 @@ static const char *intrinsics[] = {
     "EXCEPTION-STATUS", "LOCALE-DATE", "LOCALE-TIME", "DISPLAY-OF",
     "NATIONAL-OF", "ULENGTH", "UPOS", "USUBSTR", "UUID4", "BIT-OF",
     "BIT-TO-CHAR", "CHAR-NATIONAL", "COMBINED-DATETIME",
-    "CONVERT", "TRIM-LEFT", "TRIM-RIGHT", "MODULE-NAME",
-    "MODULE-ID", "ARGS", "NUMBER-OF-CALL-PARAMETERS", 0
+    "TRIM-LEFT", "TRIM-RIGHT", "MODULE-NAME",
+    "MODULE-ID", "NUMBER-OF-CALL-PARAMETERS", 0
 };
 
 static int is_intrinsic(const char *s)

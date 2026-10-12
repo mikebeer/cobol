@@ -132,6 +132,8 @@ static unsigned long fn_seed = 1;
 
 #define FN_MAXARGS 64
 
+static CobFld *cob_fn2(int id, int n, CobFld **a);
+
 static CobFld *cob_fn(int id, int n, ...)
 {
     CobFld *a[FN_MAXARGS];
@@ -546,10 +548,8 @@ static CobFld *cob_fn(int id, int n, ...)
     case FN_NUMBER_OF_CALL_PARAMETERS:
         return fn_int(0);
     default:
-        break;
+        return cob_fn2(id, n, a);
     }
-    cob_fatal("intrinsic function not implemented");
-    return 0;
 }
 
 static CobFld *cob_ufn(const char *name, int n, ...)

@@ -1,0 +1,8 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. SUBA.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       77 Y PIC 999.
+       PROCEDURE DIVISION USING Y.
+           ADD 10 TO Y.
+           GOBACK.

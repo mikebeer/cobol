@@ -7,7 +7,7 @@ PARTS   = src/rt00_const.h src/c00_defs.h src/c10_util.c src/c20_lex.c src/c25_c
           src/c50_stmt.c src/c52_more.c src/c55_io.c src/c58_proc.c \
           src/c70_main.c
 RTPARTS = src/rt0_head.h src/rt00_const.h src/rt1_dec.h src/rt2_fld.h src/rt3_core.h \
-          src/rt4_misc.h src/rt5_str.h src/rt6_fn.h src/rt7_file.h
+          src/rt4_misc.h src/rt5_str.h src/rt6_fn.h src/rt6b_fn.h src/rt7_file.h
 
 all: cobol src/cobrt.h
 

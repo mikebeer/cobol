@@ -12,7 +12,7 @@
 #else
 #define EXE_SFX ""
 #define NULDEV " >/dev/null 2>&1"
-#define LIBM " -lm"
+#define LIBM " -rdynamic -lm -ldl"
 #define DIRSEP '/'
 #endif
 
@@ -109,9 +109,11 @@ static int build_exe(char **files, int nf, const char *exe,
     } else {
         cmd = cat3(cc, " ", inc);
         if (mode == 2) cmd = cat2(cmd, " -c");
+        else if (mode == 3)
+            cmd = cat4(cmd, " -shared -fPIC -o \"", exe, "\"");
         else cmd = cat4(cmd, " -o \"", exe, "\"");
     }
-    cmd = cat3(cmd, list, kind != 2 && mode == 1 ? LIBM : "");
+    cmd = cat3(cmd, list, kind != 2 && mode != 2 ? LIBM : "");
 #ifdef _WIN32
     cmd = cat3("\"", cmd, "\"");
 #endif
@@ -226,9 +228,10 @@ static int translate(char **pf, int npf, char *out, int tostdout)
         fprintf(o,
                 "    cob_stop((int)cob_getrc());\n    return 0;\n}\n");
     } else {
-        fprintf(o, "void cobmod_register(void)\n{\n");
+        fprintf(o, "void cobmod_register(void (*reg)(const char *, "
+                   "CobFn))\n{\n");
         for (i = 0; i < nallprogs; i++)
-            fprintf(o, "    cob_reg(\"%s\", PGM%d);\n",
+            fprintf(o, "    reg(\"%s\", PGM%d);\n",
                     allprogs[i]->name, allprogs[i]->id_);
         fprintf(o, "}\n");
     }
@@ -288,6 +291,15 @@ int main(int argc, char **argv)
     }
     if (!build && !objonly) return 0;
     for (i = 0; i < noth; i++) cf[ncf++] = oth[i];
+    if (opt_nomain && !objonly) {
+        char *so = out;
+        if (!so) {
+            so = exename(pf[0]);
+            so[strlen(so) - strlen(EXE_SFX)] = 0;
+            so = cat2(so, ".so");
+        }
+        return build_exe(cf, ncf, so, ccname, argv[0], 3);
+    }
     rc = build_exe(cf, ncf, out ? out : exename(pf[0]), ccname,
                    argv[0], objonly ? 2 : 1);
     return rc;

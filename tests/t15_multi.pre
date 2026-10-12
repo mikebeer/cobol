@@ -1,0 +1,4 @@
+# build the dynamic module used by t15_multi
+cd /tmp/cobtest || exit 1
+$COBOL_ABS -M -c -o /tmp/cobtest/dynsub.so $TOP/tests/s15_dyn.cob \
+  > /tmp/cobtest/t15_pre.log 2>&1

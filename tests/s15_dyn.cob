@@ -1,0 +1,8 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. DYNSUB.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       77 Y PIC 999.
+       PROCEDURE DIVISION USING Y.
+           ADD 100 TO Y.
+           GOBACK.

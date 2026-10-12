@@ -1,0 +1,8 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. SUBB.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       77 Y PIC 999.
+       PROCEDURE DIVISION USING Y.
+           MULTIPLY 2 BY Y.
+           GOBACK.

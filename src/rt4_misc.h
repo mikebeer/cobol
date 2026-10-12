@@ -241,17 +241,102 @@ static int cob_builtin_call(const char *name, int na, CobFld **a)
     return 0;
 }
 
+#ifdef COB_HAVE_DL
+typedef size_t (*CobCFn)(size_t, size_t, size_t, size_t, size_t,
+                         size_t, size_t, size_t);
+typedef void (*CobRegFn)(void (*)(const char *, CobFn));
+
+/* load NAME.so (or libNAME.so) from COB_LIBRARY_PATH or "." and let
+   it register its programs */
+static int cob_load_module(const char *name)
+{
+    char lo[48], path[600];
+    const char *lp = getenv("COB_LIBRARY_PATH");
+    char dirs[520];
+    char *d, *e;
+    int pass, k;
+    long i, n = (long)strlen(name);
+    if (n > 40) return 0;
+    for (i = 0; i <= n; i++)
+        lo[i] = (char)tolower((unsigned char)name[i]);
+    strcpy(dirs, lp && strlen(lp) < 500 ? lp : "");
+    if (dirs[0]) strcat(dirs, ":");
+    strcat(dirs, ".");
+    for (d = dirs; d && *d; d = e ? e + 1 : 0) {
+        e = strchr(d, ':');
+        if (e) *e = 0;
+        for (pass = 0; pass < 4; pass++) {
+            void *h;
+            CobRegFn rf;
+            const char *base = pass < 2 ? lo : name;
+            sprintf(path, "%s/%s%s.so", d, pass % 2 ? "lib" : "",
+                    base);
+            h = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+            if (!h) continue;
+            rf = (CobRegFn)dlsym(h, "cobmod_register");
+            if (!rf) continue;
+            k = cob_nprogs;
+            rf(cob_reg);
+            if (cob_nprogs > k) return 1;
+        }
+        if (!e) break;
+    }
+    return 0;
+}
+
+/* call a C function: BY REFERENCE arguments as addresses, BY VALUE
+   arguments as integers */
+static int cob_ccall(const char *name, int na, CobFld **a, CobFld *ret)
+{
+    char lo[48];
+    void *p;
+    size_t v[8];
+    int i;
+    size_t r;
+    long n = (long)strlen(name);
+    if (n > 40) return 0;
+    for (i = 0; i <= n; i++)
+        lo[i] = (char)tolower((unsigned char)name[i]);
+    p = dlsym(RTLD_DEFAULT, name);
+    if (!p) p = dlsym(RTLD_DEFAULT, lo);
+    if (!p) return 0;
+    memset(v, 0, sizeof v);
+    for (i = 0; i < na && i < 8; i++) {
+        if (!a[i]) v[i] = 0;
+        else if (a[i]->attr == &cob_bv_attr) {
+            int x;
+            memcpy(&x, a[i]->data, sizeof x);
+            v[i] = (size_t)(long)x;
+        } else v[i] = (size_t)a[i]->data;
+    }
+    r = ((CobCFn)p)(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+    cob_seti(&cob_return_code, (long)(int)r);
+    if (ret) cob_seti(ret, (long)(int)r);
+    return 1;
+}
+#endif
+
 static int cob_call(const char *name, int na, CobFld **a, CobFld *ret)
 {
     char u[40];
-    int i;
+    int i, pass;
     cob_upname(u, name, (long)strlen(name));
-    for (i = 0; i < cob_nprogs; i++)
-        if (!strcmp(cob_progs[i].name, u)) {
-            cob_progs[i].fn(na, a, ret);
-            return 0;
+    for (pass = 0; pass < 2; pass++) {
+        for (i = 0; i < cob_nprogs; i++)
+            if (!strcmp(cob_progs[i].name, u)) {
+                cob_progs[i].fn(na, a, ret);
+                return 0;
+            }
+        if (pass == 0 && cob_builtin_call(u, na, a)) return 0;
+#ifdef COB_HAVE_DL
+        if (pass == 0 && !cob_load_module(name)) {
+            if (cob_ccall(name, na, a, ret)) return 0;
+            break;
         }
-    if (cob_builtin_call(u, na, a)) return 0;
+#else
+        break;
+#endif
+    }
     return 1;
 }
 
