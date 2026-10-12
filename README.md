@@ -10,4 +10,5 @@ CMS (source lines <= 71 columns) and on Linux/Windows.
 
 Status: phase 1 (COBOL-85 core: data, arithmetic, control flow,
 tables, strings, CALL/LINKAGE, COPY/REPLACE, free format).
-Files, SORT/MERGE, declaratives and OO are planned.
+Phase 2 adds files (sequential, line sequential, relative, indexed),
+SORT/MERGE and USE declaratives. OO is planned.

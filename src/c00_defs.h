@@ -115,6 +115,8 @@ struct Fil {
     char *dependn;
     int sel_line;
     int rectype;                /* 0 fixed, 1 variable */
+    char *depn;                 /* DEPENDING ON name */
+    struct Para *dp;            /* USE procedure for the file */
 };
 
 typedef struct Para Para;
@@ -154,4 +156,5 @@ struct Prog {
     char currency;
     Cls *cls;
     int ismethod;
+    struct Para *dmode[4];      /* USE ... INPUT/OUTPUT/I-O/EXTEND */
 };

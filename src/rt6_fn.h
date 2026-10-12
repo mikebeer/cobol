@@ -403,7 +403,7 @@ static CobFld *cob_fn(int id, int n, ...)
     case FN_CURRENT_DATE: {
         time_t tt = time(0);
         struct tm lt, gt;
-        char b[40];
+        char b[80];
         long off;
         lt = *localtime(&tt);
         gt = *gmtime(&tt);

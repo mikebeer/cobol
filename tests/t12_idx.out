@@ -1,0 +1,14 @@
+dup key 22
+K0001 BBB first     
+K0002 AAA second    
+K0003 AAA third     
+random second    
+K9999 not found 23
+alt: K0002 AAA changed   
+alt: K0003 AAA third     
+persisted changed   
+rel dup 22
+0002 two         
+0005 five        
+5 gone 23
+TWO!        

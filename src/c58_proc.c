@@ -150,7 +150,10 @@ static void parse_procedure(void)
     cur_para = 0;
     nloops = 0;
     if (isw("DECLARATIVES")) {
-        syn("DECLARATIVES are not supported yet");
+        tp++;
+        need_period();
+        in_decl = 1;
+        em(fmt("goto LDE%d;\n", P->id_));
     }
     sentence_start();
     for (;;) {
@@ -179,6 +182,20 @@ static void parse_procedure(void)
             continue;
         }
         if (at_period()) { tp++; continue; }
+        if (in_decl && isw("END") && isw_at(1, "DECLARATIVES")) {
+            tp += 2;
+            need_period();
+            close_section();
+            em(fmt("LDE%d: ;\n", P->id_));
+            in_decl = 0;
+            sentence_start();
+            continue;
+        }
+        if (in_decl && isw("USE")) {
+            p_use();
+            need_period();
+            continue;
+        }
         if (!stmt_start()) syn("statement expected");
         while (stmt_start()) p_statement();
         if (at_period()) {
@@ -266,6 +283,7 @@ static void parse_program(Prog *outer)
         Sb d;
         memset(&d, 0, sizeof d);
         emit_data(pr, &d);
+        emit_files(pr, &d);
         sb_s(&out_code, sb_str(&d));
     }
     parse_procedure();

@@ -920,7 +920,7 @@ static void parse_fd(int sd)
                     acc("CHARACTERS");
                     if (acc("DEPENDING")) {
                         acc("ON");
-                        f->dependn = get_name();
+                        f->depn = get_name();
                     }
                     f->rectype = 1;
                 } else if (cur()->k == T_NUM) {
@@ -932,7 +932,7 @@ static void parse_fd(int sd)
                     acc("CHARACTERS");
                     if (acc("DEPENDING")) {
                         acc("ON");
-                        f->dependn = get_name();
+                        f->depn = get_name();
                     }
                 } else if (acc("IS") || 1) {
                     /* RECORD IS VARYING ... */
@@ -943,7 +943,7 @@ static void parse_fd(int sd)
                         acc("CHARACTERS");
                         if (acc("DEPENDING")) {
                             acc("ON");
-                            f->dependn = get_name();
+                            f->depn = get_name();
                         }
                         f->rectype = 1;
                     }

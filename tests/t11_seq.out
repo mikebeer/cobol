@@ -1,0 +1,13 @@
+open out 00
+0001-ALPHA     
+0002-BETA      
+0003-GAMMA     
+count 03 status 10
+0001ALPHA2    
+[first line]
+[second]
+[ ]
+[x]
+optional 05
+nf at end
+close again 42
