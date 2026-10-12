@@ -428,6 +428,14 @@ static void init_item(InitTab *t, Item *it, int covered, int inred)
     }
 }
 
+static void emit_renames(Prog *pr, Sb *o, Sb *bind, Item *r, int dyn)
+{
+    Item *x;
+    for (x = pr->items; x; x = x->inext)
+        if (x->level == 66 && x->rec == r && x->rfrom)
+            emit_fields(o, bind, x, r, dyn);
+}
+
 static void emit_data(Prog *pr, Sb *o)
 {
     Item *r;
@@ -467,12 +475,16 @@ static void emit_data(Prog *pr, Sb *o)
         if (dyn) {
             Item *m = r->master;
             emit_fields(o, &bind, r, r, 1);
+            emit_renames(pr, o, &bind, r, 1);
             sb_s(o, fmt("static void BIND%d(unsigned char *b)\n{\n",
                 r->id));
             sb_s(o, fmt("    B%d = b;\n", m->id));
             sb_s(o, sb_str(&bind));
             sb_s(o, "}\n");
-        } else emit_fields(o, &bind, r, r, 0);
+        } else {
+            emit_fields(o, &bind, r, r, 0);
+            emit_renames(pr, o, &bind, r, 0);
+        }
     }
     for (r = pr->recs; r; r = r->rnext) {
         if (r->level == 66 || r->level == 78 || r->level == 88)

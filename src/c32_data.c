@@ -435,6 +435,7 @@ static Item *data_entry(int storage)
             {
                 Item *o = lookup(get_name(), 0, 0);
                 Val *v = (Val *)xalloc(sizeof(Val));
+                if (o && !o->size && cur_rec) close_record();
                 Tok nt;
                 memset(&nt, 0, sizeof nt);
                 nt.k = T_NUM;

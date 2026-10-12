@@ -221,6 +221,19 @@ static unsigned char *cob_adapt(CobFld *a, const CobFld *formal)
     return b;
 }
 
+/* initialize a field to its default: spaces or zero */
+static void cob_clear(CobFld *f)
+{
+    switch (f->attr->type) {
+    case CT_GROUP: case CT_ALNUM: case CT_ALNEDIT: case CT_NAT:
+        memset(f->data, ' ', (size_t)f->size);
+        break;
+    default:
+        cob_seti(f, 0);
+        break;
+    }
+}
+
 /* ---- the program registry and CALL ---- */
 
 typedef int (*CobFn)(int, CobFld **, CobFld *);

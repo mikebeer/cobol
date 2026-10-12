@@ -92,16 +92,19 @@ static int PGM1(int cob_na, CobFld **cob_a, CobFld *cob_ret)
 CA[0] = &F6;
 cob_clr_ex();
 E = cob_call("SUBA", 1, CA, 0);
+if (E) cob_fatal("CALL: program not found");
 cob_disp(&F6);
 cob_disp_nl();
 CA[0] = &F6;
 cob_clr_ex();
 E = cob_call("SUBB", 1, CA, 0);
+if (E) cob_fatal("CALL: program not found");
 cob_disp(&F6);
 cob_disp_nl();
 CA[0] = &F6;
 cob_clr_ex();
 E = cob_call("DYNSUB", 1, CA, 0);
+if (E) cob_fatal("CALL: program not found");
 cob_disp(&F6);
 cob_disp_nl();
 cob_byvalue(&CF23, cdx_lit(&D1, "20"));
@@ -110,11 +113,13 @@ CA[0] = &CF23;
 CA[1] = &CF25;
 cob_clr_ex();
 E = cob_call("cadd", 2, CA, &F7);
+if (E) cob_fatal("CALL: program not found");
 cob_disp(&F7);
 cob_disp_nl();
 CA[0] = &F8;
 cob_clr_ex();
 E = cob_call("clen", 1, CA, &F7);
+if (E) cob_fatal("CALL: program not found");
 cob_disp(&F7);
 cob_disp_nl();
 cob_clr_ex();
@@ -172,8 +177,8 @@ static int PGM35(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)pfe; (void)pfv; (void)pfsp; (void)pfr;
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
-    if (cob_first) { cob_first = 0; cob_run_init(INI36, 3); }
     if (cob_na > 0 && cob_a[0]) BIND40(cob_adapt(cob_a[0], &F40));
+    if (cob_first) { cob_first = 0; cob_run_init(INI36, 3); }
 cob_clr_ex(); E = 0;
 S1 = cdx_lit(&D1, "10");
 E |= cob_addto(S1, &F40, 0, 0);
@@ -225,8 +230,8 @@ static int PGM45(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)pfe; (void)pfv; (void)pfsp; (void)pfr;
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
-    if (cob_first) { cob_first = 0; cob_run_init(INI46, 3); }
     if (cob_na > 0 && cob_a[0]) BIND50(cob_adapt(cob_a[0], &F50));
+    if (cob_first) { cob_first = 0; cob_run_init(INI46, 3); }
 cob_clr_ex(); E = 0;
 S1 = cdx_lit(&D1, "2");
 E |= cob_mulby(S1, &F50, 0, 0);

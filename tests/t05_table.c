@@ -177,7 +177,8 @@ cob_clr_ex(); E = 0;
 S1 = cdx_mul(&D3, cdx_ld(&D1, &F16), cdx_lit(&D2, "10"));
 E |= cob_stx(S1, cob_el(&T1, &F9, cob_ix(cob_toi(&F16), 5) * 8), 0, 0);
 cob_move(&K32, cob_el(&T1, &F10, cob_ix(cob_toi(&F16), 5) * 8));
-cob_move(&F16, cob_rm(&T2, cob_el(&T1, &F10, cob_ix(cob_toi(&F16), 5) * 8), 6L, 1L));
+cob_move(&F16, cob_rm(&T2, cob_el(&T1, &F10, cob_ix(cob_toi(&F16), 5)
+    * 8), 6L, 1L));
 C28: ;
 cob_clr_ex(); cob_addto(cdx_lit(&D1, "1"), &F16, 0, 0);
 goto L28V0;
@@ -189,7 +190,8 @@ cob_move(&K29, &F17);
 L35V0: if ((cob_cmp(&F17, &K36) > 0)) goto B35V0;
 cob_clr_ex(); E = 0;
 S1 = cdx_mul(&D3, cdx_ld(&D1, &F16), cdx_ld(&D2, &F17));
-E |= cob_stx(S1, cob_el(&T1, &F13, cob_ix(cob_toi(&F16), 3) * 4 + cob_ix(cob_toi(&F17), 4) * 1), 0, 0);
+E |= cob_stx(S1, cob_el(&T1, &F13, cob_ix(cob_toi(&F16), 3) * 4 +
+    cob_ix(cob_toi(&F17), 4) * 1), 0, 0);
 C35: ;
 cob_clr_ex(); cob_addto(cdx_lit(&D1, "1"), &F17, 0, 0);
 goto L35V0;
@@ -216,7 +218,8 @@ cob_disp(&K44);
 cob_disp_nl();
 goto SE43;
 }
-if ((cob_cmp(cob_el(&T1, &F9, cob_ix(cob_toi(&F8), 5) * 8), &K45) == 0)) {
+if ((cob_cmp(cob_el(&T1, &F9, cob_ix(cob_toi(&F8), 5) * 8), &K45) ==
+    0)) {
 cob_disp(&K46);
 cob_disp(cob_el(&T1, &F10, cob_ix(cob_toi(&F8), 5) * 8));
 cob_disp_nl();
@@ -233,7 +236,8 @@ cob_disp(&K50);
 cob_disp_nl();
 goto SE49;
 }
-if ((cob_cmp(cob_el(&T1, &F9, cob_ix(cob_toi(&F8), 5) * 8), &K51) == 0)) {
+if ((cob_cmp(cob_el(&T1, &F9, cob_ix(cob_toi(&F8), 5) * 8), &K51) ==
+    0)) {
 cob_disp(&K52);
 cob_disp_nl();
 goto SE49;
@@ -247,7 +251,8 @@ cob_seti(&F8, 1);
 LS54: if (cob_toi(&F8) > 5L) {
 goto SE54;
 }
-if ((cob_cmp(cob_el(&T1, &F9, cob_ix(cob_toi(&F8), 5) * 8), &K55) == 0)) {
+if ((cob_cmp(cob_el(&T1, &F9, cob_ix(cob_toi(&F8), 5) * 8), &K55) ==
+    0)) {
 cob_disp(&K56);
 cob_disp(&F8);
 cob_disp_nl();
@@ -288,7 +293,8 @@ cob_disp(&K74);
 cob_disp_nl();
 cob_move(&K26, &F16);
 cob_move(&K77, cob_el(&T1, &F10, cob_ix(cob_toi(&F16), 5) * 8));
-cob_disp(cob_rm(&T2, cob_el(&T1, &F10, cob_ix(cob_toi(&F16), 5) * 8), 2L, 3L));
+cob_disp(cob_rm(&T2, cob_el(&T1, &F10, cob_ix(cob_toi(&F16), 5) * 8),
+    2L, 3L));
 cob_disp_nl();
 cob_stop((int)cob_getrc());
 goto cob_exit;

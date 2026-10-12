@@ -168,9 +168,12 @@ static int PGM1(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI2, 9); }
 L14: ;
-if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] = 19; pfv[pfsp] = 20; pfsp++; goto L18; R20: ;
-if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] = 26; pfv[pfsp] = 27; pfsp++; goto L23; R27: ;
-if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] = 31; pfv[pfsp] = 32; pfsp++; goto L30; R32: ;
+if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] =
+    19; pfv[pfsp] = 20; pfsp++; goto L18; R20: ;
+if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] =
+    26; pfv[pfsp] = 27; pfsp++; goto L23; R27: ;
+if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] =
+    31; pfv[pfsp] = 32; pfsp++; goto L30; R32: ;
 cob_move(&K35, &F6);
 L34V0: if ((cob_cmp(&F6, &K36) > 0)) goto B34V0;
 cob_disp(&K37);
@@ -223,15 +226,19 @@ cob_disp(&F8);
 cob_disp_nl();
 CT1 = cob_toi(&K40);
 L53T: if (CT1 <= 0) goto B53;
-if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] = 19; pfv[pfsp] = 55; pfsp++; goto L18; R55: ;
+if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] =
+    19; pfv[pfsp] = 55; pfsp++; goto L18; R55: ;
 C53: ; CT1--; goto L53T;
 B53: ;
 cob_move(&K57, &F11);
-if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] = 61; pfv[pfsp] = 62; pfsp++; goto L60; R62: ;
+if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] =
+    61; pfv[pfsp] = 62; pfsp++; goto L60; R62: ;
 cob_move(&K64, &F11);
-if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] = 61; pfv[pfsp] = 67; pfsp++; goto L60; R67: ;
+if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] =
+    61; pfv[pfsp] = 67; pfsp++; goto L60; R67: ;
 cob_move(&K69, &F11);
-if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] = 61; pfv[pfsp] = 72; pfsp++; goto L60; R72: ;
+if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] =
+    61; pfv[pfsp] = 72; pfsp++; goto L60; R72: ;
 cob_move(&K36, &F6);
 switch (cob_toi(&F6)) {
 case 1: goto L75;
@@ -256,7 +263,8 @@ E78: ;
 L79: ;
 cob_disp(&K91);
 cob_disp_nl();
-if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] = 95; pfv[pfsp] = 96; pfsp++; goto L94; R96: ;
+if (pfsp >= 128) cob_fatal("PERFORM nested too deeply"); pfe[pfsp] =
+    95; pfv[pfsp] = 96; pfsp++; goto L94; R96: ;
 cob_disp(&K98);
 cob_disp(&F10);
 cob_disp_nl();
@@ -267,7 +275,8 @@ L18: ;
 cob_disp(&K102);
 cob_disp_nl();
 E19: ;
-if (pfsp > 0 && pfe[pfsp - 1] == 19) { pfsp--; pfr = pfv[pfsp]; goto PFRET; }
+if (pfsp > 0 && pfe[pfsp - 1] == 19) { pfsp--; pfr = pfv[pfsp]; goto
+    PFRET; }
 
 L23: ;
 cob_disp(&K105);
@@ -278,7 +287,8 @@ L25: ;
 cob_disp(&K108);
 cob_disp_nl();
 E26: ;
-if (pfsp > 0 && pfe[pfsp - 1] == 26) { pfsp--; pfr = pfv[pfsp]; goto PFRET; }
+if (pfsp > 0 && pfe[pfsp - 1] == 26) { pfsp--; pfr = pfv[pfsp]; goto
+    PFRET; }
 
 L60: ;
 {
@@ -320,7 +330,8 @@ goto EV120;
 EV120: ;
 }
 E61: ;
-if (pfsp > 0 && pfe[pfsp - 1] == 61) { pfsp--; pfr = pfv[pfsp]; goto PFRET; }
+if (pfsp > 0 && pfe[pfsp - 1] == 61) { pfsp--; pfr = pfv[pfsp]; goto
+    PFRET; }
 
 L94: ;
 cob_move(&K35, &F6);
@@ -337,7 +348,8 @@ goto L129V0;
 B129V0: ;
 B129: ;
 E95: ;
-if (pfsp > 0 && pfe[pfsp - 1] == 95) { pfsp--; pfr = pfv[pfsp]; goto PFRET; }
+if (pfsp > 0 && pfe[pfsp - 1] == 95) { pfsp--; pfr = pfv[pfsp]; goto
+    PFRET; }
 
 L30: ;
 L133: ;
@@ -351,7 +363,8 @@ cob_disp_nl();
 E139: ;
 
 E31: ;
-if (pfsp > 0 && pfe[pfsp - 1] == 31) { pfsp--; pfr = pfv[pfsp]; goto PFRET; }
+if (pfsp > 0 && pfe[pfsp - 1] == 31) { pfsp--; pfr = pfv[pfsp]; goto
+    PFRET; }
 
 goto cob_exit;
 cob_exit: ;

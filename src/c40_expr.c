@@ -336,13 +336,22 @@ static Opd p_ident(void)
     return o;
 }
 
+static int fn_trim_mode = 0;
+
 static void dump_fn_args(Sb *a, int *n)
 {
     *n = 0;
+    fn_trim_mode = 0;
     if (!isop("(") || paren_has_colon()) return;
     tp++;
     while (!isop(")")) {
-        Opd o = p_aexpr();
+        Opd o;
+        if (isw("LEADING") || isw("TRAILING")) {
+            fn_trim_mode = isw("LEADING") ? 1 : 2;
+            tp++;
+            continue;
+        }
+        o = p_aexpr();
         sb_s(a, ", ");
         sb_s(a, opd_fld(&o));
         (*n)++;
@@ -393,6 +402,8 @@ static Opd p_function(void)
         return o;
     }
     dump_fn_args(&a, &n);
+    if (!strcmp(name, "TRIM") && fn_trim_mode)
+        name = fn_trim_mode == 1 ? "TRIM-LEFT" : "TRIM-RIGHT";
     o.k = K_FIELD;
     o.c = fmt("cob_fn(FN_%s, %d%s)", mangle(name), n, sb_str(&a));
     if (isop("(") && paren_has_colon()) o.c = p_refmod(o.c);

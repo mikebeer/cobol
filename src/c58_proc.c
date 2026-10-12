@@ -82,6 +82,14 @@ static void emit_program(Prog *pr)
                 sb_s(&f, fmt("    unsigned char *OSV%d = B%d;\n",
                              r->id, r->id));
     }
+    for (r = pr->recs; r; r = r->rnext)
+        if (r->master == r && r->storage == 2 && !r->based)
+            sb_s(&f, fmt("    unsigned char *LSV%d = B%d;\n", r->id,
+                         r->id));
+    if (pr->recursive)
+        for (i = 0; i < pr->nusing; i++)
+            sb_s(&f, fmt("    unsigned char *ASV%d = B%d;\n",
+                         pr->using_[i]->id, pr->using_[i]->id));
     sb_s(&f, "    (void)E; (void)S1; (void)S2; (void)S3; (void)S4;\n"
              "    (void)pfe; (void)pfv; (void)pfsp; (void)pfr;\n"
              "    (void)cob_na; (void)cob_a; (void)cob_ret;\n");
@@ -115,6 +123,11 @@ static void emit_program(Prog *pr)
             }
         }
     }
+    for (i = 0; i < pr->nusing; i++)
+        sb_s(&f, fmt(
+                "    if (cob_na > %d && cob_a[%d]) BIND%d("
+                     "cob_adapt(cob_a[%d], &F%d));\n", i, i,
+                     pr->using_[i]->id, i, pr->using_[i]->id));
     /* local storage */
     for (r = pr->recs; r; r = r->rnext)
         if (r->master == r && r->storage == 2 && !r->based)
@@ -131,13 +144,10 @@ static void emit_program(Prog *pr)
     if (pr->nloc)
         sb_s(&f, fmt("    cob_run_init(INL%d, %d);\n", pr->ndec,
                      pr->nloc));
-    for (i = 0; i < pr->nusing; i++)
-        sb_s(&f, fmt(
-                "    if (cob_na > %d && cob_a[%d]) BIND%d("
-                     "cob_adapt(cob_a[%d], &F%d));\n", i, i,
-                     pr->using_[i]->id, i, pr->using_[i]->id));
     if (pr->retitem) {
         Item *ri = lookup(pr->retitem, 0, 0);
+        if (ri && pr->isfunc)
+            sb_s(&f, "");
         if (ri && ri->storage == 1 && pr->isfunc)
             sb_s(&f, fmt("    BIND%d((unsigned char *)cob_alloc"
                          "(%ld, 1));\n", ri->master->id,
@@ -147,6 +157,10 @@ static void emit_program(Prog *pr)
                          "    else BIND%d((unsigned char *)cob_alloc"
                          "(%ld, 1));\n", ri->master->id,
                          ri->master->id, ri->master->bufsize + 8));
+    }
+    if (pr->isfunc && pr->retitem) {
+        Item *ri = lookup(pr->retitem, 0, 0);
+        if (ri) sb_s(&f, fmt("    cob_clear(&F%d);\n", ri->id));
     }
     sb_s(&f, pr->body.s ? pr->body.s : "");
     sb_s(&f, "cob_exit: ;\n");
@@ -167,7 +181,12 @@ static void emit_program(Prog *pr)
     }
     for (r = pr->recs; r; r = r->rnext)
         if (r->master == r && r->storage == 2 && !r->based)
-            sb_s(&f, fmt("    cob_free(B%d);\n", r->id));
+            sb_s(&f, fmt("    cob_free(B%d);\n    BIND%d(LSV%d);\n",
+                         r->id, r->id, r->id));
+    if (pr->recursive)
+        for (i = 0; i < pr->nusing; i++)
+            sb_s(&f, fmt("    BIND%d(ASV%d);\n", pr->using_[i]->id,
+                         pr->using_[i]->id));
     sb_s(&f, "    return 0;\n");
     sb_s(&f, "PFRET: switch (pfr) {\n");
     sb_s(&f, sb_str(&retcases));
@@ -227,7 +246,8 @@ static void parse_procedure(void)
             isw_at(1, "DIVISION")) break;
         if (isw("PROGRAM-ID") || isw("CLASS-ID") ||
             isw("FUNCTION-ID")) break;
-        if (t->k == T_WORD && isw_at(1, "SECTION")) {
+        if (t->k == T_WORD && isw_at(1, "SECTION") &&
+            strcmp(t->s, "EXIT")) {
             char *n = t->s;
             tp += 2;
             if (cur()->k == T_NUM) tp++;

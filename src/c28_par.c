@@ -95,10 +95,19 @@ static char *get_name(void)
     return t->s;
 }
 
+static Item *lookup(const char *name, char **q, int nq);
+
 static long need_int(void)
 {
     Tok *t = cur();
     long v;
+    if (t->k == T_WORD) {
+        Item *c = lookup(t->s, 0, 0);
+        if (c && c->level == 78 && c->vals && c->vals->lo.s) {
+            tp++;
+            return atol(c->vals->lo.s);
+        }
+    }
     if (t->k != T_NUM) syn("integer expected");
     v = atol(t->s);
     tp++;
@@ -208,10 +217,15 @@ static Lit *lits = 0;
 
 static void c_str(Sb *b, const char *s, long n)
 {
-    long i;
+    long i, col = 0;
     sb_c(b, '"');
     for (i = 0; i < n; i++) {
         unsigned char c = (unsigned char)s[i];
+        if (col >= 48) {
+            sb_s(b, "\"\n    \"");
+            col = 0;
+        }
+        col++;
         if (c == '"') sb_s(b, "\\\"");
         else if (c == '\\') sb_s(b, "\\\\");
         else if (c == '?') sb_s(b, "\\?");

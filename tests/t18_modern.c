@@ -149,7 +149,9 @@ cob_move(cob_fn(FN_UPPER_CASE, 1, &F6), &F7);
 cob_disp(&F7);
 cob_disp_nl();
 cob_clr_ex(); E = 0;
-S1 = cdx_add(&D7, cdx_add(&D5, cdx_add(&D3, cdx_ld(&D1, cob_fn(FN_MAX, 3, &K25, &K26, &K27)), cdx_lit(&D2, "100")), cdx_lit(&D4, "7")), cdx_lit(&D6, "9"));
+S1 = cdx_add(&D7, cdx_add(&D5, cdx_add(&D3, cdx_ld(&D1, cob_fn(FN_MAX,
+    3, &K25, &K26, &K27)), cdx_lit(&D2, "100")), cdx_lit(&D4, "7")),
+    cdx_lit(&D6, "9"));
 E |= cob_stx(S1, &F8, 0, 0);
 cob_disp(&F8);
 cob_disp_nl();

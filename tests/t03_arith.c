@@ -281,7 +281,9 @@ cob_disp(&K53);
 cob_disp(&F12);
 cob_disp_nl();
 cob_clr_ex(); E = 0;
-S1 = cdx_sub(&D9, cdx_mul(&D5, cdx_add(&D3, cdx_ld(&D1, &F6), cdx_ld(&D2, &F7)), cdx_lit(&D4, "2")), cdx_div(&D8, cdx_lit(&D6, "10"), cdx_lit(&D7, "4")));
+S1 = cdx_sub(&D9, cdx_mul(&D5, cdx_add(&D3, cdx_ld(&D1, &F6),
+    cdx_ld(&D2, &F7)), cdx_lit(&D4, "2")), cdx_div(&D8, cdx_lit(&D6,
+    "10"), cdx_lit(&D7, "4")));
 E |= cob_stx(S1, &F8, 0, 0);
 cob_disp(&K57);
 cob_disp(&F8);
@@ -363,7 +365,8 @@ cob_disp(&K93);
 cob_disp(&F8);
 cob_disp_nl();
 cob_clr_ex(); E = 0;
-S1 = cdx_add(&D3, cdx_ld(&D1, cob_fn(FN_MAX, 2, &F6, &F7)), cdx_ld(&D2, cob_fn(FN_MIN, 2, &F6, &F7)));
+S1 = cdx_add(&D3, cdx_ld(&D1, cob_fn(FN_MAX, 2, &F6, &F7)), cdx_ld(&D2,
+    cob_fn(FN_MIN, 2, &F6, &F7)));
 E |= cob_stx(S1, &F8, 0, 0);
 cob_disp(&K96);
 cob_disp(&F8);

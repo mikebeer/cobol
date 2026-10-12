@@ -185,11 +185,71 @@ static int is_cobol(const char *n)
 
 static void put_wrapped(FILE *o, const char *text)
 {
-    /* the generated code is written as is: long lines are not
-       wrapped, the C compiler does not mind; CMS output wrapping is
-       done by emit_wrapped when -cms is given */
-    fputs(text, o);
+    const char *p = text, *e;
+    char *line = (char *)xalloc((long)strlen(text) + 16);
+    long n, i, lead, brk, col;
+    int instr, inch, last;
+    while (*p) {
+        e = strchr(p, '\n');
+        n = e ? (long)(e - p) : (long)strlen(p);
+        memcpy(line, p, (size_t)n);
+        line[n] = 0;
+        p += n;
+        if (*p == '\n') p++;
+        lead = 0;
+        while (line[lead] == ' ') lead++;
+        while (n > 71) {
+            instr = 0;
+            inch = 0;
+            brk = -1;
+            for (i = 0; i < n && i < 71; i++) {
+                if (line[i] == '\\' && (instr || inch)) {
+                    i++;
+                    continue;
+                }
+                if (!instr && line[i] == '\'') inch = !inch;
+                else if (!inch && line[i] == '"') instr = !instr;
+                if (!instr && !inch && i > lead + 8 &&
+                    (line[i] == ' ' || line[i] == ',') &&
+                    i + 1 < n) {
+                    brk = line[i] == ',' ? i + 1 : i;
+                }
+            }
+            if (brk < 0) {
+                /* look further right for any break point */
+                instr = 0;
+                inch = 0;
+                for (i = 0; i < n; i++) {
+                    if (line[i] == '\\' && (instr || inch)) {
+                        i++;
+                        continue;
+                    }
+                    if (!instr && line[i] == '\'') inch = !inch;
+                    else if (!inch && line[i] == '"') instr = !instr;
+                    if (!instr && !inch && i > lead + 8 &&
+                        line[i] == ' ') {
+                        brk = i;
+                        break;
+                    }
+                }
+                if (brk < 0) break;
+            }
+            col = brk;
+            fwrite(line, 1, (size_t)col, o);
+            fputc('\n', o);
+            last = 0;
+            while (line[brk] == ' ') brk++;
+            (void)last;
+            memmove(line + lead + 4, line + brk,
+                    (size_t)(n - brk + 1));
+            for (i = 0; i < lead + 4; i++) line[i] = ' ';
+            n = lead + 4 + (n - brk);
+        }
+        fwrite(line, 1, (size_t)n, o);
+        fputc('\n', o);
+    }
 }
+
 
 static int translate(char **pf, int npf, char *out, int tostdout)
 {
@@ -219,6 +279,7 @@ static int translate(char **pf, int npf, char *out, int tostdout)
         int first = 0;
         fprintf(o, "int main(int argc, char **argv)\n{\n");
         fprintf(o, "    cob_init(argc, argv);\n");
+        if (opt_check) fprintf(o, "    cob_check = 1;\n");
         for (i = 0; i < nallprogs; i++)
             fprintf(o, "    cob_reg(\"%s\", PGM%d);\n",
                     allprogs[i]->name, allprogs[i]->id_);

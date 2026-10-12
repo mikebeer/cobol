@@ -77,9 +77,10 @@ static int PGM1(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)pfe; (void)pfv; (void)pfsp; (void)pfr;
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
-    if (cob_first) { cob_first = 0; cob_run_init(INI2, 3); }
     if (cob_na > 0 && cob_a[0]) BIND6(cob_adapt(cob_a[0], &F6));
+    if (cob_first) { cob_first = 0; cob_run_init(INI2, 3); }
     BIND7((unsigned char *)cob_alloc(13, 1));
+    cob_clear(&F7);
 cob_clr_ex(); E = 0;
 S1 = cdx_mul(&D3, cdx_ld(&D1, &F6), cdx_lit(&D2, "2"));
 E |= cob_stx(S1, &F7, 0, 0);
@@ -139,9 +140,10 @@ static int PGM12(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)pfe; (void)pfv; (void)pfsp; (void)pfr;
     (void)cob_na; (void)cob_a; (void)cob_ret;
     (void)CA;
-    if (cob_first) { cob_first = 0; cob_run_init(INI13, 3); }
     if (cob_na > 0 && cob_a[0]) BIND17(cob_adapt(cob_a[0], &F17));
+    if (cob_first) { cob_first = 0; cob_run_init(INI13, 3); }
     BIND18((unsigned char *)cob_alloc(28, 1));
+    cob_clear(&F18);
 cob_clr_ex();
 cob_str_begin(&F18, 0);
 cob_str_add(&K20, 0, 0);
@@ -197,7 +199,8 @@ static int PGM24(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     (void)CA;
     if (cob_first) { cob_first = 0; cob_run_init(INI25, 4); }
 cob_clr_ex(); E = 0;
-S1 = cdx_add(&D3, cdx_ld(&D1, cob_ufn("DOUBLE-IT", 1, &K31)), cdx_lit(&D2, "1"));
+S1 = cdx_add(&D3, cdx_ld(&D1, cob_ufn("DOUBLE-IT", 1, &K31)),
+    cdx_lit(&D2, "1"));
 E |= cob_stx(S1, &F29, 0, 0);
 cob_disp(&F29);
 cob_disp_nl();

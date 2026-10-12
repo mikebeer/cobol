@@ -44,3 +44,5 @@
 #define CR_PROHIB 6
 #define CR_HALFUP 7             /* toward +infinity on a half */
 #define CR_HALFDOWN 8           /* toward -infinity on a half */
+#define CR_CEIL 9               /* toward +infinity */
+#define CR_FLOOR 10             /* toward -infinity */

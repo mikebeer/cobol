@@ -171,6 +171,8 @@
 #define CR_PROHIB 6
 #define CR_HALFUP 7             /* toward +infinity on a half */
 #define CR_HALFDOWN 8           /* toward -infinity on a half */
+#define CR_CEIL 9               /* toward +infinity */
+#define CR_FLOOR 10             /* toward -infinity */
 
 /* rt1_dec.h -- decimal arithmetic engine (exact, no 64-bit types)
    A CobDec holds sign, scale and up to CD_MAX decimal digits, least
@@ -437,6 +439,13 @@ static int cd_div(CobDec *r, const CobDec *a, const CobDec *b, int s)
         r->scale = s;
         return 1;
     }
+    /* keep the quotient within CD_MAX digits */
+    {
+        int intd = (a->n - a->scale) - (b->n - b->scale) + 1;
+        if (intd < 1) intd = 1;
+        if (s > CD_MAX - intd - 1) s = CD_MAX - intd - 1;
+        if (s < 0) s = 0;
+    }
     /* integers: A * 10**(s + b.scale - a.scale) / B */
     sh = s + b->scale - a->scale;
     nn = 0;
@@ -446,6 +455,13 @@ static int cd_div(CobDec *r, const CobDec *a, const CobDec *b, int s)
             num[nn++] = a->d[i];
     } else {
         for (i = -sh; i < a->n; i++) num[nn++] = a->d[i];
+    }
+    if (nn > CD_MAX) {
+        /* too many quotient digits: keep the low ones, flag it */
+        int cut = nn - CD_MAX;
+        memmove(num, num + cut, (size_t)CD_MAX);
+        nn = CD_MAX;
+        cd_ovf = 1;
     }
     den = *b;
     den.scale = 0;
@@ -514,6 +530,8 @@ static void cd_setscale(CobDec *r, int s, int mode)
             break;
         case CR_HALFDOWN: up = d > 5 || (d == 5 && (rest || r->neg));
             break;
+        case CR_CEIL: up = (d > 0 || rest) && !r->neg; break;
+        case CR_FLOOR: up = (d > 0 || rest) && r->neg; break;
         default: up = 0; break;
         }
         (void)half;
@@ -2131,6 +2149,19 @@ static unsigned char *cob_adapt(CobFld *a, const CobFld *formal)
     free(keep[nk & 15]);
     keep[nk++ & 15] = b;
     return b;
+}
+
+/* initialize a field to its default: spaces or zero */
+static void cob_clear(CobFld *f)
+{
+    switch (f->attr->type) {
+    case CT_GROUP: case CT_ALNUM: case CT_ALNEDIT: case CT_NAT:
+        memset(f->data, ' ', (size_t)f->size);
+        break;
+    default:
+        cob_seti(f, 0);
+        break;
+    }
 }
 
 /* ---- the program registry and CALL ---- */

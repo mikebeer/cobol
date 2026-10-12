@@ -313,8 +313,8 @@ static int PGM33(int cob_na, CobFld **cob_a, CobFld *cob_ret)
         BIND24(ob_ + 0);
         if (isnew_) cob_run_init_z(INO2);
     }
-    if (cob_first) { cob_first = 0; cob_run_init(INI34, 3); }
     if (cob_na > 0 && cob_a[0]) BIND38(cob_adapt(cob_a[0], &F38));
+    if (cob_first) { cob_first = 0; cob_run_init(INI34, 3); }
 cob_clr_ex(); E = 0;
 S1 = cdx_ld(&D1, &F38);
 E |= cob_addto(S1, &F24, 0, 0);
@@ -487,12 +487,13 @@ static int PGM54(int cob_na, CobFld **cob_a, CobFld *cob_ret)
     cob_set_ptr(&SELFF, self);
     {
         int isnew_;
-        unsigned char *ob_ = cob_objblk(self, CLS50.idx, OSZ50, &isnew_);
+        unsigned char *ob_ = cob_objblk(self, CLS50.idx, OSZ50,
+            &isnew_);
         BIND53(ob_ + 0);
         if (isnew_) cob_run_init_z(INO51);
     }
-    if (cob_first) { cob_first = 0; cob_run_init(INI55, 3); }
     if (cob_na > 0 && cob_a[0]) BIND59(cob_adapt(cob_a[0], &F59));
+    if (cob_first) { cob_first = 0; cob_run_init(INI55, 3); }
 cob_clr_ex(); E = 0;
 S1 = cdx_ld(&D1, &F53);
 E |= cob_mulby(S1, &F59, 0, 0);
@@ -513,7 +514,8 @@ static CobMeth CMETH50[] = {
     { "INCR", PGM54, 0 },
     { 0, 0, 0 }
 };
-static CobClass CLS50 = { "STEPCOUNTER", "COUNTER", CMETH50, 1, 0, 0, 0, 0 };
+static CobClass CLS50 = { "STEPCOUNTER", "COUNTER", CMETH50, 1, 0, 0,
+    0, 0 };
 static void CLSINIT50(void)
 {
     CLS50.fac = (unsigned char *)cob_alloc(FSZ50, 1);

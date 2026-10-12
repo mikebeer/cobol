@@ -28,6 +28,10 @@ static void emit_files(Prog *pr, Sb *o)
     for (f = pr->files; f; f = f->next) {
         Item *rec = f->recs;
         if (!rec) continue;
+        if (f->dependn && !lookup(f->dependn, 0, 0)) {
+            f->assign = f->dependn;
+            f->dependn = 0;
+        }
         sb_s(o, fmt("static CobFile %s = { \"%s\", %d, %d, %d, %d, "
                     "%ld, %ld,\n", f->cname,
                     f->assign ? f->assign : f->name, f->org,

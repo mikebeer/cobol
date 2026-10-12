@@ -586,7 +586,8 @@ static void p_call(void)
         em(fmt("E = cob_call(%s, %d, CA, %s);\n", name, n, ret));
     else
         em(fmt("E = cob_call_f(%s, %d, CA, %s);\n", namefld, n, ret));
-    em_handlers(&h, "E");
+    if (h.has) em_handlers(&h, "E");
+    else em("if (E) cob_fatal(\"CALL: program not found\");\n");
     end_scope("END-CALL");
 }
 

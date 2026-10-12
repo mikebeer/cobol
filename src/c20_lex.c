@@ -409,6 +409,19 @@ static int directive(char *ln, int *freefmt)
     return 1;
 }
 
+/* length of the text before an inline *> comment (outside literals) */
+static long strip_inline(const char *t, long n)
+{
+    long j;
+    int q = 0;
+    for (j = 0; j < n; j++) {
+        if (q) { if (t[j] == q) q = 0; }
+        else if (t[j] == '"' || t[j] == '\'') q = t[j];
+        else if (t[j] == '*' && j + 1 < n && t[j + 1] == '>') return j;
+    }
+    return n;
+}
+
 static void lex_text(const char *text, const char *file, int freefmt,
                      TV *out)
 {
@@ -457,6 +470,7 @@ static void lex_text(const char *text, const char *file, int freefmt,
                 const char *t = ln + 7;
                 long tl = len - 7;
                 int q = open_lit(cur.s ? cur.s : "", cur.n);
+                if (!q) tl = strip_inline(t, tl);
                 while (tl > 0 && *t == ' ') { t++; tl--; }
                 if (q) {
                     /* pad the open literal line to column 72 */
@@ -468,6 +482,8 @@ static void lex_text(const char *text, const char *file, int freefmt,
                 }
                 continue;
             }
+            if (cur.n && open_lit(cur.s, cur.n))
+                perr(file, curline, "unterminated literal", 0);
             if (cur.n) lex_line(cur.s, cur.n, curline, file, out);
             memset(&cur, 0, sizeof cur);
             curline = line;
@@ -476,6 +492,7 @@ static void lex_text(const char *text, const char *file, int freefmt,
                 long tl = len - 7;
                 const char *t = ln + 7;
                 if (tl < 0) tl = 0;
+                if (!open_lit(t, tl)) tl = strip_inline(t, tl);
                 if (open_lit(t, tl)) {
                     sb_m(&cur, t, tl);
                     while (cur.n < 65) sb_c(&cur, ' ');

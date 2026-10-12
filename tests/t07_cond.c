@@ -262,7 +262,8 @@ if (((cob_cmp(&F6, &K44) > 0) && (cob_cmp(&F6, &K45) < 0))) {
 cob_disp(&K46);
 cob_disp_nl();
 }
-if ((((cob_cmp(&F6, &K36) == 0) || (cob_cmp(&F6, &K20) == 0)) || (cob_cmp(&F6, &K21) == 0))) {
+if ((((cob_cmp(&F6, &K36) == 0) || (cob_cmp(&F6, &K20) == 0)) ||
+    (cob_cmp(&F6, &K21) == 0))) {
 cob_disp(&K48);
 cob_disp_nl();
 }
@@ -270,11 +271,13 @@ if ((cob_cmp(&F6, &F7) <= 0)) {
 cob_disp(&K50);
 cob_disp_nl();
 }
-if ((cob_cmpd(cdx_add(&D3, cdx_ld(&D1, &F6), cdx_ld(&D2, &F7)), cdx_ld(&D4, &F8)) == 0)) {
+if ((cob_cmpd(cdx_add(&D3, cdx_ld(&D1, &F6), cdx_ld(&D2, &F7)),
+    cdx_ld(&D4, &F8)) == 0)) {
 cob_disp(&K52);
 cob_disp_nl();
 }
-if ((cob_cmpd(cdx_add(&D3, cdx_ld(&D1, &F6), cdx_ld(&D2, &F7)), cdx_lit(&D4, "25")) > 0)) {
+if ((cob_cmpd(cdx_add(&D3, cdx_ld(&D1, &F6), cdx_ld(&D2, &F7)),
+    cdx_lit(&D4, "25")) > 0)) {
 cob_disp(&K55);
 cob_disp_nl();
 }
@@ -326,7 +329,8 @@ if ((cob_cmp(&F13, &K36) == 0)) {
 cob_disp(&K78);
 cob_disp_nl();
 }
-if ((!(cob_cmp(&F13, &K83) == 0 || cob_cmp(&F13, &K44) == 0 || cob_cmp(&F13, &K84) == 0))) {
+if ((!(cob_cmp(&F13, &K83) == 0 || cob_cmp(&F13, &K44) == 0 ||
+    cob_cmp(&F13, &K84) == 0))) {
 cob_disp(&K85);
 cob_disp_nl();
 }
@@ -342,7 +346,8 @@ cob_disp_nl();
 cob_disp(&F17);
 cob_disp_nl();
 cob_move(&K44, &F13);
-if ((cob_cmp(&F13, &K83) == 0 || cob_cmp(&F13, &K44) == 0 || cob_cmp(&F13, &K84) == 0)) {
+if ((cob_cmp(&F13, &K83) == 0 || cob_cmp(&F13, &K44) == 0 ||
+    cob_cmp(&F13, &K84) == 0)) {
 cob_disp(&K95);
 cob_disp_nl();
 }

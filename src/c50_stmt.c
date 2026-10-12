@@ -453,8 +453,8 @@ static int p_rounded(void)
             else if (acc("NEAREST-EVEN")) mode = CR_EVEN;
             else if (acc("NEAREST-TOWARD-ZERO")) mode = CR_NEARTOZERO;
             else if (acc("AWAY-FROM-ZERO")) mode = CR_UP;
-            else if (acc("TOWARD-GREATER")) mode = CR_HALFUP;
-            else if (acc("TOWARD-LESSER")) mode = CR_HALFDOWN;
+            else if (acc("TOWARD-GREATER")) mode = CR_CEIL;
+            else if (acc("TOWARD-LESSER")) mode = CR_FLOOR;
             else if (acc("TRUNCATION")) mode = CR_TRUNC;
             else if (acc("PROHIBITED")) mode = CR_PROHIB;
         }
@@ -880,6 +880,11 @@ static void p_perform(void)
         } else {
             pa = p_paraname();
             if (acc("THRU") || acc("THROUGH")) pb = p_paraname();
+            if (isw_at(1, "TIMES") &&
+                (cur()->k == T_NUM || cur()->k == T_WORD)) {
+                Opd o = p_aexpr();
+                times = fmt("cob_toi(%s)", opd_fld(&o));
+            }
         }
     } else if ((cur()->k == T_NUM && isw_at(1, "TIMES")) ||
                (cur()->k == T_OP && !strcmp(cur()->s, "("))) {
