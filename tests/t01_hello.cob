@@ -1,0 +1,16 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. HELLO.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 A PIC 9(4) VALUE 12.
+       01 B PIC 9(4) VALUE 30.
+       01 C PIC 9(5).
+       01 NAME PIC X(10) VALUE "WORLD".
+       PROCEDURE DIVISION.
+       MAIN.
+           DISPLAY "HELLO, " NAME.
+           ADD A TO B GIVING C.
+           DISPLAY "SUM=" C.
+           IF C > 40 DISPLAY "BIG" ELSE DISPLAY "SMALL" END-IF.
+           PERFORM 3 TIMES DISPLAY "X" END-PERFORM.
+           STOP RUN.

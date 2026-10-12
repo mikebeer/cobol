@@ -1,0 +1,75 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. MAINPGM.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       77 R PIC 9(4) VALUE 0.
+       77 K5 PIC 9(4) VALUE 5.
+       77 K7 PIC 9(4) VALUE 7.
+       77 S PIC X(10) VALUE "hello".
+       77 T PIC S9(5)V99 VALUE 1.5.
+       PROCEDURE DIVISION.
+           CALL "ADDER" USING BY REFERENCE R BY CONTENT K5.
+           DISPLAY "R=" R.
+           CALL "ADDER" USING R K7.
+           DISPLAY "R=" R.
+           CALL "UPPER" USING S.
+           DISPLAY S.
+           CALL "DBL" USING T RETURNING R.
+           DISPLAY "T=" T " R=" R.
+           CALL "NESTED" USING R.
+           DISPLAY "R=" R.
+           CALL "MISSING" ON EXCEPTION DISPLAY "NO SUCH PGM"
+               NOT ON EXCEPTION DISPLAY "found" END-CALL.
+           STOP RUN.
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. ADDER.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       77 X PIC 9(4).
+       77 Y PIC 9(4).
+       PROCEDURE DIVISION USING X Y.
+           ADD Y TO X.
+           GOBACK.
+       END PROGRAM ADDER.
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. UPPER.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       77 S PIC X(10).
+       PROCEDURE DIVISION USING S.
+           MOVE FUNCTION UPPER-CASE(S) TO S.
+           EXIT PROGRAM.
+       END PROGRAM UPPER.
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. DBL.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       77 V PIC S9(5)V99.
+       77 RES PIC 9(4).
+       PROCEDURE DIVISION USING V RETURNING RES.
+           COMPUTE V = V * 2.
+           MOVE V TO RES.
+           GOBACK.
+       END PROGRAM DBL.
+
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. NESTED.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       77 Q PIC 9(4).
+       PROCEDURE DIVISION USING Q.
+           CALL "INNER" USING Q.
+           GOBACK.
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. INNER.
+       DATA DIVISION.
+       LINKAGE SECTION.
+       77 Q PIC 9(4).
+       PROCEDURE DIVISION USING Q.
+           MULTIPLY 10 BY Q.
+           GOBACK.
+       END PROGRAM INNER.
+       END PROGRAM NESTED.
