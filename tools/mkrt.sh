@@ -13,7 +13,8 @@ awk '/^static const char \*intrinsics\[\]/ {on=1; next}
 echo
 for f in src/rt00_const.h src/rt1_dec.h src/rt2_fld.h src/rt3_core.h \
          src/rt4_misc.h \
-         src/rt5_str.h src/rt6_fn.h src/rt6b_fn.h src/rt7_file.h
+         src/rt5_str.h src/rt6_fn.h src/rt6b_fn.h \
+         src/rt7_file.h src/rt8_obj.h
 do
   if [ -f "$f" ]; then
     echo

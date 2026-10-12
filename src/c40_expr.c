@@ -258,6 +258,11 @@ static Opd special_register(const char *n)
         o.numeric = 1;
         return o;
     }
+    if (!strcmp(n, "SELF") && P && P->ismethod) {
+        o.k = K_FIELD;
+        o.c = "&SELFF";
+        return o;
+    }
     o.k = -1;
     return o;
 }

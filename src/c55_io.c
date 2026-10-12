@@ -369,6 +369,49 @@ static void p_sort_proc(char **code)
     *code = perform_call(a, b);
 }
 
+static void p_sort_table(void)
+{
+    Opd t = p_ident();
+    Item *it = t.it;
+    int nk = 0, i;
+    char *keyc[16];
+    int keyd[16];
+    char *cnt;
+    if (!it) syn("SORT needs a table or a file");
+    while (it && it->occmax <= 0) it = it->parent;
+    if (!it) syn("SORT table has no OCCURS");
+    while (isw("ON") || isw("ASCENDING") || isw("DESCENDING")) {
+        int desc;
+        acc("ON");
+        desc = isw("DESCENDING");
+        tp++;
+        acc("KEY");
+        while (cur()->k == T_WORD && !isw("ON") && !isw("ASCENDING")
+               && !isw("DESCENDING") && !isw("WITH") &&
+               !isw("DUPLICATES")) {
+            Opd k = p_ident();
+            if (nk < 16) {
+                keyc[nk] = opd_fld(&k);
+                keyd[nk++] = desc;
+            }
+        }
+        if (nk == 0) {
+            keyc[0] = fmt("&F%d", it->id);
+            keyd[nk++] = desc;
+        }
+    }
+    if (acc("WITH")) acc("DUPLICATES");
+    else acc("DUPLICATES");
+    acc("IN"); acc("ORDER");
+    cnt = it->odo ? fmt("cob_toi(&F%d)", it->odo->id)
+                  : fmt("%ldL", (long)it->occmax);
+    em("cob_sort_begin(0);\n");
+    for (i = 0; i < nk; i++)
+        em(fmt("cob_sort_key(%s, %d);\n", keyc[i], keyd[i]));
+    em(fmt("cob_sort_table(&F%d, %s, %ldL);\n", it->id, cnt,
+           (long)it->size));
+}
+
 static void p_sort(int merge)
 {
     Fil *sd;
@@ -379,6 +422,10 @@ static void p_sort(int merge)
     int nu = 0, ng = 0;
     char *inproc = 0, *outproc = 0;
     tp++;
+    if (cur()->k == T_WORD && !find_file(cur()->s)) {
+        p_sort_table();
+        return;
+    }
     sd = p_fil();
     while (isw("ON") || isw("ASCENDING") || isw("DESCENDING")) {
         int desc;

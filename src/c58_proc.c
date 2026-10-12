@@ -5,10 +5,11 @@ static Prog *allprogs[256];
 static int nallprogs = 0;
 static int opt_nomain = 0;
 
-static void p_invoke(void)
-{
-    syn("INVOKE is not supported yet");
-}
+static void parse_class(void);
+static void skip_interface(void);
+static Prog *allclasses[64];
+static int nallclasses = 0;
+static int cur_method_fac = 0;
 
 static void skip_comment_paras(void)
 {
@@ -71,10 +72,49 @@ static void emit_program(Prog *pr)
     sb_s(&f, fmt("    CobFld *CA[%d];\n", ncall + 1));
     sb_s(&f, "    int pfe[128], pfv[128], pfsp = 0, pfr = 0;\n");
     sb_s(&f, "    static int cob_first = 1;\n");
+    if (pr->ismethod) {
+        Prog *cp = pr->outer;
+        sb_s(&f, "    CobObj *self = cob_self;\n"
+                 "    CobClass *fcls = cob_fcls;\n"
+                 "    unsigned char SELFB[16];\n    CobFld SELFF;\n");
+        for (r = cp->recs; r; r = r->rnext)
+            if (r->master == r && r->storage == (pr->isfacm ? 5 : 4))
+                sb_s(&f, fmt("    unsigned char *OSV%d = B%d;\n",
+                             r->id, r->id));
+    }
     sb_s(&f, "    (void)E; (void)S1; (void)S2; (void)S3; (void)S4;\n"
              "    (void)pfe; (void)pfv; (void)pfsp; (void)pfr;\n"
              "    (void)cob_na; (void)cob_a; (void)cob_ret;\n");
     if (ncall >= 0) sb_s(&f, "    (void)CA;\n");
+    if (pr->ismethod) {
+        Prog *cp = pr->outer;
+        int any = 0;
+        sb_s(&f, "    (void)self; (void)fcls;\n"
+                 "    SELFF.size = 8; SELFF.data = SELFB;\n"
+                 "    SELFF.attr = &cob_obj_attr;\n"
+                 "    cob_set_ptr(&SELFF, self);\n");
+        if (pr->isfacm) {
+            for (r = cp->recs; r; r = r->rnext)
+                if (r->master == r && r->storage == 5)
+                    sb_s(&f, fmt("    BIND%d(CLS%d.fac + %ld);\n",
+                                 r->id, cp->id_, r->objoff));
+        } else {
+            for (r = cp->recs; r; r = r->rnext)
+                if (r->master == r && r->storage == 4) any = 1;
+            if (any) {
+                sb_s(&f, fmt("    {\n        int isnew_;\n"
+                    "        unsigned char *ob_ = cob_objblk(self, "
+                    "CLS%d.idx, OSZ%d, &isnew_);\n", cp->id_,
+                             cp->id_));
+                for (r = cp->recs; r; r = r->rnext)
+                    if (r->master == r && r->storage == 4)
+                        sb_s(&f, fmt("        BIND%d(ob_ + %ld);\n",
+                                     r->id, r->objoff));
+                sb_s(&f, fmt("        if (isnew_) cob_run_init_z("
+                             "INO%d);\n    }\n", cp->ndec));
+            }
+        }
+    }
     /* local storage */
     for (r = pr->recs; r; r = r->rnext)
         if (r->master == r && r->storage == 2 && !r->based)
@@ -110,6 +150,12 @@ static void emit_program(Prog *pr)
     }
     sb_s(&f, pr->body.s ? pr->body.s : "");
     sb_s(&f, "cob_exit: ;\n");
+    if (pr->ismethod) {
+        Prog *cp = pr->outer;
+        for (r = cp->recs; r; r = r->rnext)
+            if (r->master == r && r->storage == (pr->isfacm ? 5 : 4))
+                sb_s(&f, fmt("    BIND%d(OSV%d);\n", r->id, r->id));
+    }
     if (pr->retitem) {
         Item *ri = lookup(pr->retitem, 0, 0);
         if (ri && pr->isfunc)
@@ -175,7 +221,8 @@ static void parse_procedure(void)
         Tok *t = cur();
         if (at_eof()) break;
         if (isw("END") && (isw_at(1, "PROGRAM") ||
-                           isw_at(1, "FUNCTION"))) break;
+                           isw_at(1, "FUNCTION") ||
+                           isw_at(1, "METHOD"))) break;
         if ((isw("IDENTIFICATION") || isw("ID")) &&
             isw_at(1, "DIVISION")) break;
         if (isw("PROGRAM-ID") || isw("CLASS-ID") ||
@@ -219,9 +266,9 @@ static void parse_procedure(void)
             tp++;
             sentence_end();
             sentence_start();
-        } else if (!(at_eof() || (isw("END") && (isw_at(1, "PROGRAM")
-                                                 || isw_at(1,
-                                                           "FUNCTION")))))
+        } else if (!(at_eof() || (isw("END") &&
+                  (isw_at(1, "PROGRAM") || isw_at(1, "FUNCTION") ||
+                   isw_at(1, "METHOD")))))
             syn("unexpected word in statement");
     }
     close_section();
@@ -243,6 +290,16 @@ static void parse_program(Prog *outer)
     Prog *pr;
     char *name;
     int idx;
+    if (isw("CLASS-ID") || ((isw("IDENTIFICATION") || isw("ID")) &&
+                            isw_at(3, "CLASS-ID"))) {
+        parse_class();
+        return;
+    }
+    if (isw("INTERFACE-ID") || ((isw("IDENTIFICATION") || isw("ID")) &&
+                                isw_at(3, "INTERFACE-ID"))) {
+        skip_interface();
+        return;
+    }
     pr = (Prog *)xalloc(sizeof(Prog));
     pr->outer = outer;
     pr->id_ = ++idctr;
@@ -253,7 +310,10 @@ static void parse_program(Prog *outer)
         need_period();
     }
     if (acc("FUNCTION-ID")) pr->isfunc = 1;
-    else need("PROGRAM-ID");
+    else if (acc("METHOD-ID")) {
+        pr->ismethod = 1;
+        pr->isfacm = cur_method_fac;
+    } else need("PROGRAM-ID");
     acc_period();
     name = get_name();
     pr->name = upcase(name);
@@ -266,9 +326,15 @@ static void parse_program(Prog *outer)
             tp++;
         }
     }
+    if (pr->ismethod && outer && outer->ncm < 96) {
+        outer->cm[outer->ncm].name = pr->name;
+        outer->cm[outer->ncm].id = pr->id_;
+        outer->cm[outer->ncm++].fac = pr->isfacm;
+    }
     for (;;) {
         skip_is();
-        if (acc("COMMON")) pr->common = 1;
+        if (acc("OVERRIDE") || acc("FINAL")) { }
+        else if (acc("COMMON")) pr->common = 1;
         else if (acc("INITIAL")) pr->initial = 1;
         else if (acc("RECURSIVE")) pr->recursive = 1;
         else if (acc("PROGRAM")) { }
@@ -276,7 +342,7 @@ static void parse_program(Prog *outer)
     }
     need_period();
     idx = nallprogs;
-    if (nallprogs < 256) allprogs[nallprogs++] = pr;
+    if (nallprogs < 256 && !pr->ismethod) allprogs[nallprogs++] = pr;
     pr->next = 0;
     if (lastprog) lastprog->next = pr;
     else progs = pr;
@@ -314,14 +380,14 @@ static void parse_program(Prog *outer)
     parse_procedure();
     emit_program(pr);
     /* nested programs */
-    while ((isw("IDENTIFICATION") || isw("ID") || isw("PROGRAM-ID") ||
-            isw("FUNCTION-ID")) && !(isw("END"))) {
+    while (!pr->ismethod && (isw("IDENTIFICATION") || isw("ID") ||
+           isw("PROGRAM-ID") || isw("FUNCTION-ID")) && !(isw("END"))) {
         Prog *saved = pr;
         parse_program(pr);
         P = saved;
     }
     if (isw("END") && (isw_at(1, "PROGRAM") ||
-                       isw_at(1, "FUNCTION"))) {
+                       isw_at(1, "FUNCTION") || isw_at(1, "METHOD"))) {
         tp += 2;
         get_name();
         acc_period();

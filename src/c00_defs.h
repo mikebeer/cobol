@@ -70,6 +70,7 @@ struct Item {
     Prog *prog;
     char *cname;                /* C name of the field */
     char *objtype;              /* OBJECT REFERENCE class */
+    long objoff;                /* offset in object/factory block */
     int emitted;
     int dims;                   /* number of enclosing OCCURS */
     Item *hnext;                /* hash chain */
@@ -157,5 +158,13 @@ struct Prog {
     Cls *cls;
     int ismethod;
     int isfunc;                 /* FUNCTION-ID */
+    int iscls;                  /* CLASS-ID */
+    int isfacm;                 /* a FACTORY method */
+    char *base;                 /* parent class */
+    char *clsname;
+    long objsz, facsz;
+    int nobj, nfac;
+    struct { char *name; int id; int fac; } cm[96];
+    int ncm;
     struct Para *dmode[4];      /* USE ... INPUT/OUTPUT/I-O/EXTEND */
 };

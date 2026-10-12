@@ -21,6 +21,7 @@ static Item *pend66[64];
 static int npend66 = 0;
 static int cur_storage = 0;
 static Fil *cur_fil = 0;
+static int ws_storage = 0;      /* 4/5 inside OBJECT/FACTORY */
 
 static const char *clause_words[] = {
     "REDEFINES", "PIC", "PICTURE", "USAGE", "DISPLAY", "COMP",
@@ -410,6 +411,7 @@ static Item *data_entry(int storage)
     it = new_item();
     it->level = level;
     it->storage = storage;
+    if (storage == 4 || storage == 5) it->global = 1;
     if (t->k == T_WORD && !strcmp(t->s, "FILLER")) {
         tp++;
         it->filler = 1;
@@ -997,6 +999,7 @@ static void parse_data(void)
         } else if (isw("WORKING-STORAGE") || isw("LOCAL-STORAGE") ||
                    isw("LINKAGE")) {
             int st = isw("LINKAGE") ? 1 : isw("LOCAL-STORAGE") ? 2 : 0;
+            if (st == 0 && ws_storage) st = ws_storage;
             tp++; need("SECTION"); need_period();
             cur_storage = st;
             cur_fil = 0;

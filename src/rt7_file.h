@@ -825,6 +825,7 @@ static void cob_fnh(CobFile *f, int st)
 
 typedef struct CobSort {
     CobFile *sd;
+    unsigned char *base;
     unsigned char **r;
     long n, cap, pos;
     int nk;
@@ -838,6 +839,8 @@ static void cob_sort_begin(CobFile *sd)
 {
     memset(&cob_srt, 0, sizeof cob_srt);
     cob_srt.sd = sd;
+    if (!sd) return;
+    cob_srt.base = sd->rec;
     sd->rs = sd->recsz;
 }
 
@@ -868,7 +871,7 @@ static int cob_sortcmp(const unsigned char *a, const unsigned char *b)
     CobSort *s = &cob_srt;
     int i;
     for (i = 0; i < s->nk; i++) {
-        long off = (long)(s->kf[i]->data - s->sd->rec);
+        long off = (long)(s->kf[i]->data - s->base);
         CobFld x, y;
         int c;
         x = *s->kf[i];
@@ -962,4 +965,36 @@ static int cob_sort_giving(CobFile *sd, CobFile *f)
     }
     cob_close(f);
     return st >= 10 ? st : 0;
+}
+
+/* SORT of a table in place: first element, count, element size */
+static void cob_sort_table(CobFld *first, long n, long esz)
+{
+    CobSort *s = &cob_srt;
+    long i;
+    unsigned char *copy;
+    unsigned char **t;
+    if (n < 2) return;
+    copy = (unsigned char *)malloc((size_t)(n * esz));
+    s->r = (unsigned char **)malloc((size_t)n * sizeof(unsigned char
+        *));
+    t = (unsigned char **)malloc((size_t)n * sizeof(unsigned char *));
+    if (!copy || !s->r || !t) cob_fatal("out of memory");
+    memcpy(copy, first->data, (size_t)(n * esz));
+    s->base = first->data;
+    for (i = 0; i < n; i++) s->r[i] = copy + i * esz;
+    cob_msort(s->r, t, n);
+    {
+        unsigned char *out = (unsigned char *)malloc((size_t)(n *
+            esz));
+        if (!out) cob_fatal("out of memory");
+        for (i = 0; i < n; i++)
+            memcpy(out + i * esz, s->r[i], (size_t)esz);
+        memcpy(first->data, out, (size_t)(n * esz));
+        free(out);
+    }
+    free(t);
+    free(s->r);
+    free(copy);
+    memset(s, 0, sizeof *s);
 }

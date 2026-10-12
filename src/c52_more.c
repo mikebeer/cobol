@@ -504,6 +504,60 @@ static void p_initialize(void)
 
 /* ---- CALL ---- */
 
+static int p_call_args(char **argv_)
+{
+    int n = 0;
+    int mode = 0;               /* 0 ref, 1 content, 2 value */
+    for (;;) {
+        if (acc("BY")) {
+            if (acc("REFERENCE")) mode = 0;
+            else if (acc("CONTENT")) mode = 1;
+            else if (acc("VALUE")) mode = 2;
+            continue;
+        }
+        if (acc("REFERENCE")) { mode = 0; continue; }
+        if (acc("CONTENT")) { mode = 1; continue; }
+        if (acc("VALUE")) { mode = 2; continue; }
+        if (isw("OMITTED")) {
+            tp++;
+            if (n < 64) argv_[n++] = "0";
+            continue;
+        }
+        if (!starts_operand()) break;
+        {
+            Opd o = p_aexpr();
+            char *a;
+            if (mode == 0) a = opd_fld(&o);
+            else if (mode == 1) {
+                int id = ++idctr;
+                long sz = 64;
+                if (o.it) sz = o.it->size;
+                else if (o.k == K_NLIT || o.k == K_SLIT)
+                    sz = o.lit.len ? o.lit.len : 32;
+                if (sz < 64) sz = 64;
+                sb_s(&P->init,
+                    fmt("static unsigned char CC%d[%ld];\n"
+                    "static CobFld CF%d = { %ld, CC%d, 0 };\n",
+                    id, sz, id, sz, id));
+                em(fmt("cob_content(&CF%d, %s, %ld);\n", id,
+                       opd_fld(&o), sz));
+                a = fmt("&CF%d", id);
+            } else {
+                int id = ++idctr;
+                sb_s(&P->init,
+                    fmt("static unsigned char CC%d[16];\n"
+                    "static CobFld CF%d = { 4, CC%d, 0 };\n",
+                    id, id, id));
+                em(fmt("cob_byvalue(&CF%d, %s);\n", id,
+                       opd_dec(&o)));
+                a = fmt("&CF%d", id);
+            }
+            if (n < 64) argv_[n++] = a;
+        }
+    }
+    return n;
+}
+
 static void p_call(void)
 {
     char *argv_[64];
@@ -518,56 +572,7 @@ static void p_call(void)
     if (tn.k == K_SLIT) {
         name = c_lit_str(tn.lit.s);
     } else namefld = opd_fld(&tn);
-    if (acc("USING")) {
-        int mode = 0;               /* 0 ref, 1 content, 2 value */
-        for (;;) {
-            if (acc("BY")) {
-                if (acc("REFERENCE")) mode = 0;
-                else if (acc("CONTENT")) mode = 1;
-                else if (acc("VALUE")) mode = 2;
-                continue;
-            }
-            if (acc("REFERENCE")) { mode = 0; continue; }
-            if (acc("CONTENT")) { mode = 1; continue; }
-            if (acc("VALUE")) { mode = 2; continue; }
-            if (isw("OMITTED")) {
-                tp++;
-                if (n < 64) argv_[n++] = "0";
-                continue;
-            }
-            if (!starts_operand()) break;
-            {
-                Opd o = p_aexpr();
-                char *a;
-                if (mode == 0) a = opd_fld(&o);
-                else if (mode == 1) {
-                    int id = ++idctr;
-                    long sz = 64;
-                    if (o.it) sz = o.it->size;
-                    else if (o.k == K_NLIT || o.k == K_SLIT)
-                        sz = o.lit.len ? o.lit.len : 32;
-                    if (sz < 64) sz = 64;
-                    sb_s(&P->init,
-                        fmt("static unsigned char CC%d[%ld];\n"
-                        "static CobFld CF%d = { %ld, CC%d, 0 };\n",
-                        id, sz, id, sz, id));
-                    em(fmt("cob_content(&CF%d, %s, %ld);\n", id,
-                           opd_fld(&o), sz));
-                    a = fmt("&CF%d", id);
-                } else {
-                    int id = ++idctr;
-                    sb_s(&P->init,
-                        fmt("static unsigned char CC%d[16];\n"
-                        "static CobFld CF%d = { 4, CC%d, 0 };\n",
-                        id, id, id));
-                    em(fmt("cob_byvalue(&CF%d, %s);\n", id,
-                           opd_dec(&o)));
-                    a = fmt("&CF%d", id);
-                }
-                if (n < 64) argv_[n++] = a;
-            }
-        }
-    }
+    if (acc("USING")) n = p_call_args(argv_);
     (void)prefs;
     if (acc("RETURNING") || acc("GIVING")) {
         Opd r = p_ident();

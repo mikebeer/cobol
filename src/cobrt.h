@@ -4528,6 +4528,7 @@ static void cob_fnh(CobFile *f, int st)
 
 typedef struct CobSort {
     CobFile *sd;
+    unsigned char *base;
     unsigned char **r;
     long n, cap, pos;
     int nk;
@@ -4541,6 +4542,8 @@ static void cob_sort_begin(CobFile *sd)
 {
     memset(&cob_srt, 0, sizeof cob_srt);
     cob_srt.sd = sd;
+    if (!sd) return;
+    cob_srt.base = sd->rec;
     sd->rs = sd->recsz;
 }
 
@@ -4571,7 +4574,7 @@ static int cob_sortcmp(const unsigned char *a, const unsigned char *b)
     CobSort *s = &cob_srt;
     int i;
     for (i = 0; i < s->nk; i++) {
-        long off = (long)(s->kf[i]->data - s->sd->rec);
+        long off = (long)(s->kf[i]->data - s->base);
         CobFld x, y;
         int c;
         x = *s->kf[i];
@@ -4665,6 +4668,186 @@ static int cob_sort_giving(CobFile *sd, CobFile *f)
     }
     cob_close(f);
     return st >= 10 ? st : 0;
+}
+
+/* SORT of a table in place: first element, count, element size */
+static void cob_sort_table(CobFld *first, long n, long esz)
+{
+    CobSort *s = &cob_srt;
+    long i;
+    unsigned char *copy;
+    unsigned char **t;
+    if (n < 2) return;
+    copy = (unsigned char *)malloc((size_t)(n * esz));
+    s->r = (unsigned char **)malloc((size_t)n * sizeof(unsigned char
+        *));
+    t = (unsigned char **)malloc((size_t)n * sizeof(unsigned char *));
+    if (!copy || !s->r || !t) cob_fatal("out of memory");
+    memcpy(copy, first->data, (size_t)(n * esz));
+    s->base = first->data;
+    for (i = 0; i < n; i++) s->r[i] = copy + i * esz;
+    cob_msort(s->r, t, n);
+    {
+        unsigned char *out = (unsigned char *)malloc((size_t)(n *
+            esz));
+        if (!out) cob_fatal("out of memory");
+        for (i = 0; i < n; i++)
+            memcpy(out + i * esz, s->r[i], (size_t)esz);
+        memcpy(first->data, out, (size_t)(n * esz));
+        free(out);
+    }
+    free(t);
+    free(s->r);
+    free(copy);
+    memset(s, 0, sizeof *s);
+}
+
+/* rt8_obj.h -- classes and objects */
+
+typedef struct CobClass CobClass;
+typedef struct CobObj CobObj;
+typedef struct { const char *name; CobFn fn; int fac; } CobMeth;
+
+struct CobClass {
+    const char *name;
+    const char *base;
+    CobMeth *meths;
+    int nmeths;
+    CobClass *bp;
+    unsigned char *fac;
+    int idx;
+    CobObj *fobj;
+};
+
+struct CobObj {
+    CobClass *cls;
+    int isfac;
+    unsigned char *blk[64];
+};
+
+static CobClass *cob_classes[64];
+static int cob_ncls = 0;
+static CobObj *cob_self = 0;
+static CobClass *cob_fcls = 0;
+static const CobAttr cob_obj_attr = { CT_OBJ, 18, 0, 0, 0 };
+
+static void cob_class_reg(CobClass *c)
+{
+    CobObj *f;
+    if (cob_ncls >= 64) cob_fatal("too many classes");
+    c->idx = cob_ncls;
+    cob_classes[cob_ncls++] = c;
+    f = (CobObj *)calloc(1, sizeof(CobObj));
+    if (!f) cob_fatal("out of memory");
+    f->cls = c;
+    f->isfac = 1;
+    c->fobj = f;
+}
+
+static CobClass *cob_class_find(const char *name)
+{
+    int i;
+    char u[48];
+    cob_upname(u, name, (long)strlen(name));
+    for (i = 0; i < cob_ncls; i++)
+        if (!strcmp(cob_classes[i]->name, u)) return cob_classes[i];
+    return 0;
+}
+
+static CobClass *cob_base(CobClass *c)
+{
+    if (!c->bp && c->base) c->bp = cob_class_find(c->base);
+    return c->bp;
+}
+
+static CobObj *cob_class_obj(const char *name)
+{
+    CobClass *c = cob_class_find(name);
+    if (!c) cob_fatal("class not found");
+    return c->fobj;
+}
+
+static CobObj *cob_getobj(const CobFld *f)
+{
+    CobObj *o;
+    memcpy(&o, f->data, sizeof o);
+    return o;
+}
+
+static unsigned char *cob_objblk(CobObj *o, int idx, long size,
+                                 int *isnew)
+{
+    *isnew = 0;
+    if (!o) cob_fatal("method called without an object");
+    if (!o->blk[idx]) {
+        o->blk[idx] = (unsigned char *)cob_alloc(size, 1);
+        *isnew = 1;
+    }
+    return o->blk[idx];
+}
+
+static CobMeth *cob_find_meth(CobClass *c, const char *name, int fac)
+{
+    for (; c; c = cob_base(c)) {
+        int i;
+        for (i = 0; i < c->nmeths; i++)
+            if (c->meths[i].fac == fac &&
+                !strcmp(c->meths[i].name, name)) return &c->meths[i];
+    }
+    return 0;
+}
+
+/* returns 0 when the method ran, 1 when there is no such method */
+static int cob_invoke(CobObj *o, const char *name, int na, CobFld **a,
+                      CobFld *ret, CobClass *super_from)
+{
+    char u[48];
+    CobMeth *m;
+    CobClass *start;
+    if (!o) cob_fatal("INVOKE on a null object reference");
+    cob_upname(u, name, (long)strlen(name));
+    start = super_from ? cob_base(super_from) : o->cls;
+    m = start ? cob_find_meth(start, u, o->isfac) : 0;
+    if (!m) {
+        if (o->isfac && !strcmp(u, "NEW")) {
+            CobObj *n = (CobObj *)calloc(1, sizeof(CobObj));
+            if (!n) cob_fatal("out of memory");
+            n->cls = o->cls;
+            if (ret) cob_set_ptr(ret, n);
+            return 0;
+        }
+        if (!o->isfac && !strcmp(u, "FREE")) {
+            int i;
+            for (i = 0; i < 64; i++) free(o->blk[i]);
+            free(o);
+            return 0;
+        }
+        return 1;
+    }
+    cob_self = o;
+    cob_fcls = o->cls;
+    m->fn(na, a, ret);
+    return 0;
+}
+
+static int cob_invoke_f(CobObj *o, const CobFld *nf, int na,
+                        CobFld **a, CobFld *ret, CobClass *super_from)
+{
+    char b[48];
+    long n = nf->size;
+    if (n > 40) n = 40;
+    memcpy(b, nf->data, (size_t)n);
+    while (n > 0 && (b[n - 1] == ' ' || b[n - 1] == 0)) n--;
+    b[n] = 0;
+    return cob_invoke(o, b, na, a, ret, super_from);
+}
+
+/* run an initialization table that ends with an empty entry */
+static void cob_run_init_z(const CobInit *t)
+{
+    int n = 0;
+    while (t[n].f) n++;
+    cob_run_init(t, n);
 }
 
 #endif

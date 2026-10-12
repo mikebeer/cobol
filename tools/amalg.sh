@@ -14,6 +14,7 @@ for f in src/rt00_const.h src/c00_defs.h src/c10_util.c \
     src/c20_lex.c src/c25_copy.c \
          src/c28_par.c src/c30_pic.c src/c32_data.c src/c40_expr.c \
          src/c50_stmt.c src/c52_more.c src/c55_io.c src/c58_proc.c \
+         src/c60_oo.c \
          src/c70_main.c
 do
   echo

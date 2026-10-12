@@ -431,9 +431,24 @@ static void init_item(InitTab *t, Item *it, int covered, int inred)
 static void emit_data(Prog *pr, Sb *o)
 {
     Item *r;
-    InitTab ws, loc;
+    InitTab ws, loc, obt, fct;
+    long oo = 0, fo = 0;
     memset(&ws, 0, sizeof ws);
     memset(&loc, 0, sizeof loc);
+    memset(&obt, 0, sizeof obt);
+    memset(&fct, 0, sizeof fct);
+    for (r = pr->recs; r; r = r->rnext) {
+        if (r->master != r) continue;
+        if (r->storage == 4) {
+            r->objoff = oo;
+            oo += (r->bufsize + 8 + 7) / 8 * 8;
+        } else if (r->storage == 5) {
+            r->objoff = fo;
+            fo += (r->bufsize + 8 + 7) / 8 * 8;
+        }
+    }
+    pr->objsz = oo;
+    pr->facsz = fo;
     /* storage arrays */
     for (r = pr->recs; r; r = r->rnext) {
         if (r->master != r) continue;
@@ -463,7 +478,10 @@ static void emit_data(Prog *pr, Sb *o)
         if (r->level == 66 || r->level == 78 || r->level == 88)
             continue;
         if (r->storage == 1 || r->based) continue;
-        if (r->storage == 4 || r->storage == 5) continue;
+        if (r->storage == 4 || r->storage == 5) {
+            init_item(r->storage == 4 ? &obt : &fct, r, 0, 0);
+            continue;
+        }
         init_item(r->storage == 2 ? &loc : &ws, r, 0, 0);
     }
     sb_s(o, "static CobInit INI");
@@ -473,6 +491,18 @@ static void emit_data(Prog *pr, Sb *o)
     sb_s(o, fmt("static CobInit INL%d[] = {\n", pr->ndec));
     sb_s(o, loc.s.s ? loc.s.s : "");
     sb_s(o, "    { 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 } }\n};\n");
+    if (pr->iscls) {
+        sb_s(o, fmt("#define OSZ%d %ld\n#define FSZ%d %ld\n",
+                    pr->id_, oo + 8, pr->id_, fo + 8));
+        sb_s(o, fmt("static CobInit INO%d[] = {\n", pr->ndec));
+        sb_s(o, obt.s.s ? obt.s.s : "");
+        sb_s(o, "    { 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 } }\n"
+                "};\n");
+        sb_s(o, fmt("static CobInit INF%d[] = {\n", pr->ndec));
+        sb_s(o, fct.s.s ? fct.s.s : "");
+        sb_s(o, "    { 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 } }\n"
+                "};\n");
+    }
     pr->nws = ws.n;
     pr->nloc = loc.n;
 }

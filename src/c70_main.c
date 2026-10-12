@@ -222,6 +222,10 @@ static int translate(char **pf, int npf, char *out, int tostdout)
         for (i = 0; i < nallprogs; i++)
             fprintf(o, "    cob_reg(\"%s\", PGM%d);\n",
                     allprogs[i]->name, allprogs[i]->id_);
+        for (i = 0; i < nallclasses; i++)
+            fprintf(o, "    cob_class_reg(&CLS%d);\n"
+                       "    CLSINIT%d();\n", allclasses[i]->id_,
+                    allclasses[i]->id_);
         for (i = 0; i < nallprogs; i++)
             if (!allprogs[i]->outer && !allprogs[i]->isfunc) {
                 first = i;
