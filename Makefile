@@ -31,3 +31,27 @@ lines:
 
 clean:
 	rm -f cobol cobol_all.c src/cobrt.h
+	rm -rf dist
+
+PREFIX  ?= /usr/local
+VERSION  = 1.0
+
+install: all
+	mkdir -p $(DESTDIR)$(PREFIX)/bin $(DESTDIR)$(PREFIX)/share/cobol
+	cp cobol $(DESTDIR)$(PREFIX)/bin/
+	cp src/cobrt.h $(DESTDIR)$(PREFIX)/share/cobol/
+	cp -r examples $(DESTDIR)$(PREFIX)/share/cobol/
+
+# Windows (needs MinGW-w64: i686-w64-mingw32-gcc, x86_64-w64-mingw32-gcc)
+win: cobol_all.c
+	mkdir -p dist
+	i686-w64-mingw32-gcc -O2 -std=c89 -o dist/cobol-i686.exe \
+	  cobol_all.c -lm -static
+	x86_64-w64-mingw32-gcc -O2 -std=c89 -o dist/cobol-x86_64.exe \
+	  cobol_all.c -lm -static
+
+# release packages in dist/: Windows zips, Linux tar.gz, rpm, deb
+dist: all win
+	sh tools/package.sh $(VERSION)
+
+.PHONY: all test lines clean install win dist

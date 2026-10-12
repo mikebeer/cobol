@@ -3,3 +3,4 @@ cobol_all.c
 *.o
 tests/*.c
 !tests/s15_c.c
+dist/

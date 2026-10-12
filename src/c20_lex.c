@@ -293,8 +293,8 @@ static int open_lit(const char *s, long n)
 }
 
 /* conditional compilation state */
-#define CC_MAX 32
-static int cc_on[CC_MAX], cc_taken[CC_MAX], cc_n = 0;
+#define CCALL_MAX 32
+static int cc_on[CCALL_MAX], cc_taken[CCALL_MAX], cc_n = 0;
 
 static int cc_active(void)
 {
@@ -363,7 +363,7 @@ static int directive(char *ln, int *freefmt)
     if (nw == 0) return 1;
     if (!strcmp(w[0], "IF")) {
         int r = cc_active() ? cc_eval(w + 1, nw - 1) : 0;
-        if (cc_n < CC_MAX) {
+        if (cc_n < CCALL_MAX) {
             cc_on[cc_n] = r;
             cc_taken[cc_n] = r;
             cc_n++;
